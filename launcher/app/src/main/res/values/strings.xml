@@ -193,4 +193,5 @@
     <string name="opt_inputs">Inputs button</string>
     <string name="opt_wifi">Wi-Fi button</string>
     <string name="opt_state">%1$s: %2$s</string>
+    <string name="launcher_pill">Launcher</string>
 </resources>

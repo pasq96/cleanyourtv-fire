@@ -350,7 +350,8 @@
 
                 <TextView
                     android:id="@+id/btnLauncher"
-                    style="@style/TopButtonIcon"
+                    style="@style/TopButton"
+                    android:text="@string/launcher_pill"
                     android:contentDescription="@string/launcher_settings"
                     android:drawableStart="@drawable/ic_tune"
                     android:nextFocusDown="@+id/grid" />
