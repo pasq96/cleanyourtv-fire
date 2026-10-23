@@ -1,7 +1,6 @@
 package com.gathin.tvhome;
 
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
@@ -120,10 +119,8 @@ public final class LauncherSettingsActivity extends Activity {
         vpnChoice = findViewById(R.id.vpnChoice);
         vpnChoice.setOnClickListener(v -> pickVpnApps());
         findViewById(R.id.hiddenChoice).setOnClickListener(v -> pickHiddenApps());
-        findViewById(R.id.resetChoice).setOnClickListener(v -> new AlertDialog.Builder(this, R.style.GlassDialog)
-                .setTitle(R.string.reset_defaults)
-                .setMessage(R.string.reset_defaults_hint)
-                .setPositiveButton(R.string.reset_defaults, (d, w) -> {
+        findViewById(R.id.resetChoice).setOnClickListener(v -> GlassDialog.confirm(this,
+                getString(R.string.reset_defaults), getString(R.string.reset_defaults_hint), R.string.reset_defaults, () -> {
                     // Back to the built-in setup: no VPN app, theme and layout choices cleared (hidden apps stay as they are).
                     // Keep the change counter and theme stamp: Home must still see a change, and the stamp must not look new.
                     long revision = choices.getLong(Config.SETTINGS_REVISION_KEY, 0);
@@ -134,8 +131,7 @@ public final class LauncherSettingsActivity extends Activity {
                     wipe.commit();
                     changed();
                     recreate();
-                })
-                .setNegativeButton(android.R.string.cancel, null).show());
+                }));
         int[] liftIds = {R.id.lift0, R.id.lift1, R.id.lift2, R.id.lift3};
         for (int i = 0; i < liftIds.length; i++) {
             final int value = i;
@@ -187,12 +183,8 @@ public final class LauncherSettingsActivity extends Activity {
                     if (i == 1) {
                         setAdvanced(false);
                     } else {
-                        new AlertDialog.Builder(this, R.style.GlassDialog)
-                                .setTitle(R.string.advanced_effects)
-                                .setMessage(R.string.advanced_effects_warning)
-                                .setPositiveButton(R.string.enable, (dialog, which) -> setAdvanced(true))
-                                .setNegativeButton(android.R.string.cancel, null)
-                                .show();
+                        GlassDialog.confirm(this, getString(R.string.advanced_effects), getString(R.string.advanced_effects_warning),
+                                R.string.enable, () -> setAdvanced(true));
                     }
                 });
         addSegmented(findViewById(R.id.segSort), R.string.lbl_sort, 0, new int[]{R.string.sort_manual, R.string.sort_recent},
@@ -289,26 +281,25 @@ public final class LauncherSettingsActivity extends Activity {
         String current = choices.getString(Config.WALLPAPER_CHOICE_KEY, null);
         int checked = "none".equals(current) ? images.size()
                 : indexOf(images, current);
-        new AlertDialog.Builder(this, R.style.GlassDialog)
-                .setTitle(R.string.wallpaper_label)
-                .setSingleChoiceItems(labels, checked, (dialog, which) -> {
-                    dialog.dismiss();
+        boolean[] on = new boolean[labels.length];
+        if (checked >= 0) on[checked] = true;
+        new GlassDialog(this, getString(R.string.wallpaper_label)).width(560)
+                .list(labels, on, false, which -> {
                     if (which == images.size()) {
                         choices.edit().putString(Config.WALLPAPER_CHOICE_KEY, "none").apply();
                     } else {
-                        choices.edit().putString(Config.WALLPAPER_CHOICE_KEY,
-                                images.get(which).getName()).apply();
+                        choices.edit().putString(Config.WALLPAPER_CHOICE_KEY, images.get(which).getName()).apply();
                     }
                     changed();
                     Toast.makeText(this, R.string.wallpaper_applied, Toast.LENGTH_SHORT).show();
                     refresh();
                 })
-                .setNeutralButton(R.string.wallpaper_theme_default, (dialog, which) -> {
+                .button(android.R.string.cancel, null)
+                .button(R.string.wallpaper_theme_default, () -> {
                     choices.edit().remove(Config.WALLPAPER_CHOICE_KEY).apply();
                     changed();
                     refresh();
                 })
-                .setNegativeButton(android.R.string.cancel, null)
                 .show();
     }
 
@@ -386,18 +377,12 @@ public final class LauncherSettingsActivity extends Activity {
 
     /** A one-line text entry (API key, place) saved as a choice; the weather cache is dropped so it refreshes. */
     private void askText(String key, int title) {
-        final android.widget.EditText input = new android.widget.EditText(this);
-        input.setSingleLine(true);
-        input.setText(choices.getString(key, ""));
-        input.setSelection(input.getText().length());
-        new AlertDialog.Builder(this, R.style.GlassDialog).setTitle(title).setView(input)
-                .setPositiveButton(android.R.string.ok, (d, w) -> {
-                    choices.edit().putString(key, input.getText().toString().trim()).apply();
-                    Weather.forget(this);
-                    changed();
-                    refresh();
-                })
-                .setNegativeButton(android.R.string.cancel, null).show();
+        GlassDialog.ask(this, title, choices.getString(key, ""), value -> {
+            choices.edit().putString(key, value).apply();
+            Weather.forget(this);
+            changed();
+            refresh();
+        });
     }
 
     /**
@@ -498,16 +483,17 @@ public final class LauncherSettingsActivity extends Activity {
             labels[i] = apps.get(i)[1];
             on[i] = current.contains(apps.get(i)[0]);
         }
-        new AlertDialog.Builder(this, R.style.GlassDialog).setTitle(R.string.vpn_apps)
-                .setMultiChoiceItems(labels, on, (d, which, checked) -> on[which] = checked)
-                .setPositiveButton(android.R.string.ok, (d, w) -> {
+        new GlassDialog(this, getString(R.string.vpn_apps)).width(560)
+                .list(labels, on, true, null)
+                .button(android.R.string.cancel, null)
+                .button(android.R.string.ok, () -> {
                     List<String> picked = new ArrayList<>();
                     for (int i = 0; i < on.length; i++) if (on[i]) picked.add(apps.get(i)[0]);
                     choices.edit().putString(Config.VPN_APP_KEY, android.text.TextUtils.join(",", picked)).apply();
                     changed();
                     refresh();
                 })
-                .setNegativeButton(android.R.string.cancel, null).show();
+                .show();
     }
 
     /** Every launchable app with a tick when it is hidden from Home; OK applies the changes. */
@@ -520,9 +506,10 @@ public final class LauncherSettingsActivity extends Activity {
             labels[i] = apps.get(i)[1];
             on[i] = was[i] = hidden.contains(apps.get(i)[0]);
         }
-        new AlertDialog.Builder(this, R.style.GlassDialog).setTitle(R.string.hidden_apps)
-                .setMultiChoiceItems(labels, on, (d, which, checked) -> on[which] = checked)
-                .setPositiveButton(android.R.string.ok, (d, w) -> {
+        new GlassDialog(this, getString(R.string.hidden_apps)).width(560)
+                .list(labels, on, true, null)
+                .button(android.R.string.cancel, null)
+                .button(android.R.string.ok, () -> {
                     boolean any = false;
                     for (int i = 0; i < on.length; i++) {
                         if (on[i] == was[i]) continue;
@@ -532,7 +519,7 @@ public final class LauncherSettingsActivity extends Activity {
                     }
                     if (any) changed();
                 })
-                .setNegativeButton(android.R.string.cancel, null).show();
+                .show();
     }
 
     private void open(Intent intent) {
