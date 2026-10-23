@@ -188,7 +188,8 @@
                 style="@style/SettingsBlock">
                 <TextView
                     android:id="@+id/hiddenChoice"
-                    style="@style/SettingsRow" />
+                    style="@style/SettingsRow"
+                    android:text="@string/hidden_apps" />
             </LinearLayout>
             <LinearLayout
                 android:id="@+id/togglesContainer"
