@@ -9,6 +9,8 @@ import android.net.Uri;
 import android.provider.Settings;
 import android.widget.Toast;
 
+import java.util.Arrays;
+
 /**
  * Tile menu actions on another app. A normal app can't force-stop, clear data or clear cache of another one
  * (signature permissions): Force stop ends its background processes, App info is the system page with those buttons.
@@ -37,11 +39,34 @@ final class AppActions {
         return new Intent(Intent.ACTION_DELETE, Uri.parse("package:" + pkg));
     }
 
-    /** Installed by the user (not part of the system image), so Uninstall can remove it. */
+    /** A system app that was never updated: Android keeps its App info page and Uninstall out of reach. */
+    static boolean pureSystem(Context context, String pkg) {
+        try {
+            int f = context.getPackageManager().getApplicationInfo(pkg, 0).flags;
+            return (f & ApplicationInfo.FLAG_SYSTEM) != 0 && (f & ApplicationInfo.FLAG_UPDATED_SYSTEM_APP) == 0;
+        } catch (PackageManager.NameNotFoundException e) {
+            return false;
+        }
+    }
+
+    /** The App info page exists and the app is not a bare system one (those pages refuse data and cache actions). */
+    static boolean hasInfo(Context context, String pkg) {
+        return !pureSystem(context, pkg) && info(pkg).resolveActivity(context.getPackageManager()) != null;
+    }
+
+    /** A system app the user may still turn off from its App info page: not Android itself, nor Amazon's or Google's core. */
+    static boolean disablable(Context context, String pkg) {
+        if (!pureSystem(context, pkg) || info(pkg).resolveActivity(context.getPackageManager()) == null) return false;
+        if (pkg.equals("android") || pkg.startsWith("com.android.") || pkg.startsWith("com.amazon.tv.")
+                || pkg.startsWith("com.amazon.firetv.") || pkg.equals("com.google.android.gms")) return false;
+        return !Arrays.asList(FireOs.HIDDEN).contains(pkg);
+    }
+
+    /** Not a bare system app, so Uninstall (or removing its updates) can work. */
     static boolean removable(Context context, String pkg) {
         try {
-            ApplicationInfo ai = context.getPackageManager().getApplicationInfo(pkg, 0);
-            return (ai.flags & ApplicationInfo.FLAG_SYSTEM) == 0;
+            context.getPackageManager().getApplicationInfo(pkg, 0);
+            return !pureSystem(context, pkg);   // an updated system app can at least drop its updates
         } catch (PackageManager.NameNotFoundException e) {
             return false;
         }

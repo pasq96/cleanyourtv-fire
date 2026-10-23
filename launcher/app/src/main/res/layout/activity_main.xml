@@ -352,7 +352,7 @@
                     android:id="@+id/btnLauncher"
                     style="@style/TopButtonIcon"
                     android:contentDescription="@string/launcher_settings"
-                    android:drawableStart="@drawable/ic_home_settings_pill"
+                    android:drawableStart="@drawable/ic_tune"
                     android:nextFocusDown="@+id/grid" />
 
                 <TextView

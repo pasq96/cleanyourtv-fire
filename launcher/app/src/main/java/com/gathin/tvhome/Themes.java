@@ -17,6 +17,15 @@ final class Themes {
     static final String KEY = "theme_choice";
     static final String[] IDS = {"fire", "glass", "aurora", "clean", "stock"};
 
+    static final String BANNER_STYLE_KEY = "banner_style";
+    static final int BANNER_OFF = 0, BANNER_STRETCH = 1, BANNER_GRADIENT = 2;
+
+    /** How tiles of apps without a TV banner are drawn: icon stretched to fill, icon on a gradient, or the plain icon. */
+    static int bannerStyle(Context ctx) {
+        int v = ctx.getSharedPreferences(Config.SETTINGS_NAME, Context.MODE_PRIVATE).getInt(BANNER_STYLE_KEY, BANNER_STRETCH);
+        return v >= BANNER_OFF && v <= BANNER_GRADIENT ? v : BANNER_STRETCH;
+    }
+
     static final String SORT_RECENT_KEY = "sort_recent";
 
     private Themes() {}

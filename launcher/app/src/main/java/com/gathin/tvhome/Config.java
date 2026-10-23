@@ -368,7 +368,8 @@ final class Config {
         boolean iconBanners = res.getBoolean(R.bool.icon_banners);
         // Fire OS: most apps declare no leanback entry, and the remote has a Menu key; a theme can still turn these off.
         if (fireOs) {
-            tileMenu = library = libraryButton = showAllApps = longPressMove = iconBanners = true;
+            tileMenu = library = showAllApps = longPressMove = iconBanners = true;
+            libraryButton = false;   // the footer tile already opens the App library
             // Smaller tiles than the 4-column default on a 1080p Fire TV; Launcher settings goes from 4 to 8.
             if (columns == 4) columns = 6;
         }
@@ -459,6 +460,12 @@ final class Config {
         if (mounted) syncThemeChoices(choices, dir, file);
         // VPN apps picked in Launcher settings (comma-separated packages; empty = none) win over the theme's vpn_app.
         if (choices.contains(VPN_APP_KEY)) vpn = choices.getString(VPN_APP_KEY, "").trim();
+        // Toggles from Launcher settings (key = JSON key) win over the theme.
+        showAllApps = choices.getBoolean("show_all_apps", showAllApps);
+        longPressMove = choices.getBoolean("long_press_move", longPressMove);
+        alwaysShowNames = choices.getBoolean("always_show_names", alwaysShowNames);
+        showInputsPill = choices.getBoolean("show_inputs_pill", showInputsPill);
+        showNetworkPill = choices.getBoolean("show_network_pill", showNetworkPill);
         int chosenColumns = choices.getInt("columns", columns);
         if (chosenColumns >= 4 && chosenColumns <= 8) columns = chosenColumns;
         int chosenRows = choices.getInt(ROWS_BELOW_DOCK_KEY, rowsBelow);

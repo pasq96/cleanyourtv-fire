@@ -607,7 +607,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         btnLauncher.setVisibility(launcherSettingsButton || cfg.topMenu ? View.GONE : View.VISIBLE);
         if (launcherSettingsButton) {
             ((TextView) btnSettings).setText(R.string.launcher_settings);
-            ((TextView) btnSettings).setCompoundDrawablesRelativeWithIntrinsicBounds(R.drawable.ic_home_settings_pill, 0, 0, 0);
+            ((TextView) btnSettings).setCompoundDrawablesRelativeWithIntrinsicBounds(R.drawable.ic_tune, 0, 0, 0);
         }
         btnSettings.setOnClickListener(v -> {
             if (launcherSettingsButton) startActivityForResult(
@@ -2914,7 +2914,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             status.setVisibility(View.VISIBLE);
         }
         if (launcherSettingsButton) {
-            addInputRow(rows, popup, R.drawable.ic_home_settings_pill, getString(R.string.launcher_settings), -1,
+            addInputRow(rows, popup, R.drawable.ic_tune, getString(R.string.launcher_settings), -1,
                     () -> startActivityForResult(new Intent(this, LauncherSettingsActivity.class), LAUNCHER_SETTINGS_REQUEST));
         } else {
             addInputRow(rows, popup, R.drawable.ic_settings, getString(R.string.settings), -1,
@@ -3006,9 +3006,14 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             } else Toast.makeText(this, R.string.library_save_failed, Toast.LENGTH_LONG).show();
         });
         addSettingsMenuRow(rows, popup, R.string.tile_force_stop, () -> AppActions.stop(this, pkg));
-        addSettingsMenuRow(rows, popup, R.string.tile_app_info, () -> open(AppActions.info(pkg)));
+        // Only what can work for this app: system apps have no usable info page, and cannot always be removed.
+        if (AppActions.hasInfo(this, pkg)) {
+            addSettingsMenuRow(rows, popup, R.string.tile_app_info, () -> open(AppActions.info(pkg)));
+        }
         if (AppActions.removable(this, pkg)) {
             addSettingsMenuRow(rows, popup, R.string.tile_uninstall, () -> open(AppActions.uninstall(pkg)));
+        } else if (AppActions.disablable(this, pkg)) {
+            addSettingsMenuRow(rows, popup, R.string.tile_disable, () -> open(AppActions.info(pkg)));
         }
         panel.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
         popup.setWidth(Math.max((int) (200 * density), panel.getMeasuredWidth()));

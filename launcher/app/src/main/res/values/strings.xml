@@ -168,8 +168,8 @@
     <string name="restore_failed">No backup found or it is unreadable</string>
     <string name="theme_glass">Glass (dock glass, glow)</string>
     <string name="theme_aurora">Aurora (dark blue, 6 columns)</string>
-    <string name="vpn_pill_on">VPN ON</string>
-    <string name="vpn_pill_off">VPN OFF</string>
+    <string name="vpn_pill_on">VPN</string>
+    <string name="vpn_pill_off">VPN</string>
     <string name="vpn_state">VPN apps: %1$s</string>
     <string name="vpn_none">none</string>
     <string name="vpn_apps">VPN apps</string>
@@ -177,4 +177,20 @@
     <string name="hidden_apps">Apps hidden from Home</string>
     <string name="reset_defaults">Reset to defaults</string>
     <string name="reset_defaults_hint">Clears theme and layout choices and sets VPN to none. Hidden apps stay as they are.</string>
+    <string name="tile_disable">Disable</string>
+    <string name="sec_look">Look</string>
+    <string name="sec_apps">Apps</string>
+    <string name="sec_network">Network</string>
+    <string name="sec_data">Backup and reset</string>
+    <string name="sec_system">System</string>
+    <string name="banner_state">Banner: %1$s</string>
+    <string name="banner_stretch">stretched</string>
+    <string name="banner_gradient">gradient</string>
+    <string name="banner_off">off</string>
+    <string name="opt_show_all_apps">Show all installed apps</string>
+    <string name="opt_long_press_move">Hold OK to move</string>
+    <string name="opt_names">Names under tiles</string>
+    <string name="opt_inputs">Inputs button</string>
+    <string name="opt_wifi">Wi-Fi button</string>
+    <string name="opt_state">%1$s: %2$s</string>
 </resources>

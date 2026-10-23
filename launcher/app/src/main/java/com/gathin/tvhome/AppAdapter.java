@@ -299,12 +299,13 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             // The icon is only drawn (and sampled for the glow) when there is no banner, so a tile with a
             // banner skips loading and decoding it.
             Drawable icon = banner == null ? ri.loadIcon(pm) : null;
-            if (banner == null && iconBanners && card == null) {
+            final int style = Themes.bannerStyle(ctx);
+            if (banner == null && iconBanners && style != Themes.BANNER_OFF && card == null) {
                 // sourceDir changes with every update, so a new icon makes a new banner.
-                String cacheKey = component.flattenToShortString() + '\n' + ri.activityInfo.applicationInfo.sourceDir;
+                String cacheKey = component.flattenToShortString() + '\n' + ri.activityInfo.applicationInfo.sourceDir + '\n' + style;
                 banner = iconBannerCache.get(cacheKey);
                 if (banner == null) {
-                    banner = IconBanner.make(ctx.getResources(), icon);
+                    banner = IconBanner.make(ctx.getResources(), icon, style == Themes.BANNER_STRETCH);
                     if (banner != null) iconBannerCache.put(cacheKey, banner);
                 }
             }

@@ -10,6 +10,7 @@ import android.content.pm.ResolveInfo;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -35,7 +36,8 @@ public final class LauncherSettingsActivity extends Activity {
     private TextView advancedChoice;
     private TextView followThemeChoice;
     private TextView themeChoice;
-    private TextView sortChoice, vpnChoice;
+    private TextView sortChoice, vpnChoice, bannerChoice;
+    private final List<Runnable> toggleRefreshers = new ArrayList<>();
     private int columns;
     private int rowsBelowDock;
     private int dockOpacity;
@@ -140,6 +142,18 @@ public final class LauncherSettingsActivity extends Activity {
                     recreate();
                 })
                 .setNegativeButton(android.R.string.cancel, null).show());
+        bannerChoice = findViewById(R.id.bannerChoice);
+        bannerChoice.setOnClickListener(v -> {
+            choices.edit().putInt(Themes.BANNER_STYLE_KEY, (Themes.bannerStyle(this) + 1) % 3).apply();
+            changed();
+            refresh();
+        });
+        LinearLayout toggles = findViewById(R.id.togglesContainer);
+        addToggle(toggles, "show_all_apps", R.string.opt_show_all_apps, config.showAllApps);
+        addToggle(toggles, "long_press_move", R.string.opt_long_press_move, config.longPressMove);
+        addToggle(toggles, "always_show_names", R.string.opt_names, config.alwaysShowNames);
+        addToggle(toggles, "show_inputs_pill", R.string.opt_inputs, config.showInputsPill);
+        addToggle(toggles, "show_network_pill", R.string.opt_wifi, config.showNetworkPill);
         sortChoice = findViewById(R.id.sortChoice);
         sortChoice.setOnClickListener(v -> {
             choices.edit().putBoolean(Themes.SORT_RECENT_KEY, !Themes.sortRecent(this)).apply();
@@ -287,6 +301,10 @@ public final class LauncherSettingsActivity extends Activity {
                         : wallpaperCurrent != null ? wallpaperCurrent
                         : getString(R.string.wallpaper_theme_default)));
         followThemeChoice.setSelected(!hasOnTvChoices());
+        int style = Themes.bannerStyle(this);
+        bannerChoice.setText(getString(R.string.banner_state, getString(style == Themes.BANNER_STRETCH
+                ? R.string.banner_stretch : style == Themes.BANNER_GRADIENT ? R.string.banner_gradient : R.string.banner_off)));
+        for (Runnable r : toggleRefreshers) r.run();
         String vpns = choices.getString(Config.VPN_APP_KEY, null);
         if (vpns == null) vpns = Config.load(this).vpnApp;
         List<String> names = new ArrayList<>();
@@ -306,6 +324,32 @@ public final class LauncherSettingsActivity extends Activity {
         return choices.contains(Config.VPN_APP_KEY) || choices.contains("columns") || choices.contains(Config.ROWS_BELOW_DOCK_KEY)
                 || choices.contains("animations") || choices.contains("advanced_effects")
                 || choices.contains(Config.WALLPAPER_CHOICE_KEY) || choices.contains(Config.DOCK_OPACITY_KEY);
+    }
+
+    /** An on/off row saved as a boolean choice that Config reads under the same key. */
+    private void addToggle(LinearLayout parent, String key, int label, boolean theme) {
+        TextView row = new TextView(this);
+        row.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        ((LinearLayout.LayoutParams) row.getLayoutParams()).topMargin = (int) (10 * getResources().getDisplayMetrics().density);
+        row.setFocusable(true);
+        row.setClickable(true);
+        row.setBackgroundResource(R.drawable.settings_choice_bg);
+        row.setTextColor(0xFFFFFFFF);
+        row.setTextSize(18);
+        row.setGravity(android.view.Gravity.CENTER_VERTICAL);
+        int pad = (int) (18 * getResources().getDisplayMetrics().density);
+        row.setPadding(pad, 0, pad, 0);
+        row.setMinHeight((int) (52 * getResources().getDisplayMetrics().density));
+        Runnable show = () -> row.setText(getString(R.string.opt_state, getString(label),
+                getString(choices.getBoolean(key, theme) ? R.string.on : R.string.off)));
+        row.setOnClickListener(v -> {
+            choices.edit().putBoolean(key, !choices.getBoolean(key, theme)).apply();
+            changed();
+            show.run();
+        });
+        toggleRefreshers.add(show);
+        parent.addView(row);
+        show.run();
     }
 
     /** Launchable apps that are not hidden by the system, sorted by name: package -> label. */

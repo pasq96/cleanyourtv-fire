@@ -24,8 +24,17 @@ final class IconBanner {
 
     private IconBanner() {}
 
-    static Drawable make(Resources res, Drawable icon) {
+    /** @param stretch the whole icon scaled to fill the 16:9 tile (adaptive layers included); else icon on a gradient. */
+    static Drawable make(Resources res, Drawable icon, boolean stretch) {
         if (icon == null) return null;
+        if (stretch) {
+            Bitmap filled = Bitmap.createBitmap(W, H, Bitmap.Config.ARGB_8888);
+            Canvas fc = new Canvas(filled);
+            fc.drawColor(edgeColor(render(icon, 96)));   // under a see-through icon
+            icon.setBounds(0, 0, W, H);
+            icon.draw(fc);
+            return new BitmapDrawable(res, filled);
+        }
         Bitmap out = Bitmap.createBitmap(W, H, Bitmap.Config.ARGB_8888);
         Canvas c = new Canvas(out);
         if (icon instanceof AdaptiveIconDrawable) {
