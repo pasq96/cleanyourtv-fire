@@ -62,13 +62,23 @@ jobs:
         working-directory: launcher
         run: |
           chmod +x gradlew
-          ./gradlew --no-daemon testReleaseUnitTest assembleRelease
+          ./gradlew --no-daemon testReleaseUnitTest assembleRelease 2>&1 | tee "$RUNNER_TEMP/build.log"
           cp app/build/outputs/apk/release/app-release.apk "$RUNNER_TEMP/cleanyourtv-fire.apk"
           # Readable, sortable artifact name: version, build number, commit.
           VERSION=$(sed -n "s/^ *versionName = '\(.*\)'.*/\1/p" app/build.gradle)
           NAME="cleanyourtv-fire-${VERSION}-b${GITHUB_RUN_NUMBER}-${GITHUB_SHA::7}.apk"
           mkdir -p "$RUNNER_TEMP/out" && cp "$RUNNER_TEMP/cleanyourtv-fire.apk" "$RUNNER_TEMP/out/$NAME"
           echo "APK_NAME=$NAME" >> "$GITHUB_ENV"
+      # A failed build leaves its log on a "ci-log" pre-release: readable without signing in to Actions.
+      - name: Publish build log
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh release delete ci-log --cleanup-tag --yes 2>/dev/null || true
+          gh release create ci-log "$RUNNER_TEMP/build.log" --prerelease --target "$GITHUB_SHA" \
+            --title "Failed build ${GITHUB_SHA::7}" --notes "Log of the failed build at ${GITHUB_SHA::7}."
       - name: Summary
         run: |
           APK="$RUNNER_TEMP/cleanyourtv-fire.apk"
