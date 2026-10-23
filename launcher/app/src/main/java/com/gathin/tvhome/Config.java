@@ -378,6 +378,11 @@ final class Config {
         File file = dir != null ? new File(dir, FILE_NAME) : null;
         boolean mounted = Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState());
         JSONObject json = readOverlay(ctx, file, mounted);
+        // No pushed config.json: the theme bundled in the APK and picked in Launcher settings.
+        if (json == null) {
+            json = Themes.load(ctx, Themes.chosen(
+                    ctx.getSharedPreferences(SETTINGS_NAME, Context.MODE_PRIVATE), fireOs));
+        }
         if (json != null) {
             applied = true;
             dock = stringList(json, "dock_apps", dock);

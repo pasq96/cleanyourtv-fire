@@ -27,6 +27,7 @@ public final class LauncherSettingsActivity extends Activity {
     private TextView animationsChoice;
     private TextView advancedChoice;
     private TextView followThemeChoice;
+    private TextView themeChoice;
     private int columns;
     private int rowsBelowDock;
     private int dockOpacity;
@@ -117,6 +118,22 @@ public final class LauncherSettingsActivity extends Activity {
                         .setNegativeButton(android.R.string.cancel, null)
                         .show();
             }
+        });
+        themeChoice = findViewById(R.id.themeChoice);
+        themeChoice.setOnClickListener(v -> {
+            String next = Themes.next(Themes.chosen(choices, FireOs.is(this)));
+            // The new theme's layout applies: drop on-TV choices made over the old one.
+            choices.edit().putString(Themes.KEY, next).remove("columns").remove(Config.ROWS_BELOW_DOCK_KEY)
+                    .remove("animations").remove("advanced_effects").remove(Config.WALLPAPER_CHOICE_KEY)
+                    .remove(Config.DOCK_OPACITY_KEY).commit();
+            Config current = Config.load(this);
+            columns = current.columns;
+            rowsBelowDock = current.rowsBelowDock;
+            dockOpacity = current.dockOpacity;
+            animations = current.animations;
+            advancedEffects = current.animations && current.advancedEffects;
+            changed();
+            refresh();
         });
         followThemeChoice = findViewById(R.id.followThemeChoice);
         followThemeChoice.setOnClickListener(v -> {
@@ -233,6 +250,11 @@ public final class LauncherSettingsActivity extends Activity {
                         : wallpaperCurrent != null ? wallpaperCurrent
                         : getString(R.string.wallpaper_theme_default)));
         followThemeChoice.setSelected(!hasOnTvChoices());
+        File dir = Config.dir(this);
+        boolean pushed = dir != null && new File(dir, Config.FILE_NAME).isFile();
+        String name = getString(Themes.label(Themes.chosen(choices, FireOs.is(this))));
+        themeChoice.setText(pushed ? getString(R.string.theme_state_file)
+                : getString(R.string.theme_state, name));
     }
 
     private boolean hasOnTvChoices() {

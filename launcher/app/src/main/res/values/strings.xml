@@ -152,4 +152,9 @@
     <!-- Cinematic top shelf (cinematic_home): the line under the focused dock app's name; %1$s is when it was
          last opened, e.g. "5 minutes ago" or "yesterday, 9:40 pm". -->
     <string name="last_opened">Last opened %1$s</string>
+    <string name="theme_state">Theme: %1$s</string>
+    <string name="theme_state_file">Theme from a pushed config.json (remove it to pick one here)</string>
+    <string name="theme_fire">Fire (dock Stremio, SmartTube, Sparkle)</string>
+    <string name="theme_clean">Clean (black, 6 columns)</string>
+    <string name="theme_stock">Stock (built-in)</string>
 </resources>
