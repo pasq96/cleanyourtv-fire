@@ -2556,6 +2556,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     private void open(Intent i) {
         i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         try {
+            FireOs.opening(i);
             startActivity(i);
         } catch (ActivityNotFoundException | SecurityException e) {
             Toast.makeText(this, R.string.not_available, Toast.LENGTH_SHORT).show();

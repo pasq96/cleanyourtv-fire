@@ -243,6 +243,7 @@ public final class LauncherSettingsActivity extends Activity {
 
     private void open(Intent intent) {
         try {
+            FireOs.opening(intent);
             startActivity(intent);
         } catch (ActivityNotFoundException | SecurityException e) {
             Toast.makeText(this, R.string.not_available, Toast.LENGTH_LONG).show();

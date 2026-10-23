@@ -339,6 +339,11 @@ final class Config {
         boolean handleViewInputs = res.getBoolean(R.bool.handle_view_inputs);
         List<String> appKeys = new ArrayList<>(Arrays.asList(res.getStringArray(R.array.app_keys)));
         String stockHomeRedirect = res.getString(R.string.stock_home_redirect).trim();
+        // Fire OS: Amazon's home can't be replaced, only covered, and a force stop would end that for good.
+        if (FireOs.is(ctx)) {
+            if (stockHomeRedirect.isEmpty()) stockHomeRedirect = FireOs.LAUNCHER;
+            restoreKeyServices = true;
+        }
         boolean cinematic = res.getBoolean(R.bool.cinematic_home);
         boolean ambientGlow = res.getBoolean(R.bool.ambient_glow);
         boolean appGlow = res.getBoolean(R.bool.app_glow);

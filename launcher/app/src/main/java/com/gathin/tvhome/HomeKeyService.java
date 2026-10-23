@@ -7,6 +7,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.os.SystemClock;
 import android.os.UserManager;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
@@ -15,8 +16,10 @@ import android.view.KeyEvent;
 import android.view.accessibility.AccessibilityEvent;
 import android.widget.Toast;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -27,6 +30,7 @@ import java.util.Set;
  *
  * With stock_home_redirect set, it also sends the stock launcher's home screen back here, for firmware that turns
  * that launcher on again after it was disabled (XGIMI's xrmservice does, on its own remote keys).
+ * On Fire OS it is on by default: Amazon's launcher stays the system home and this one covers its home window.
  *
  * Enable over adb:
  *   settings put secure enabled_accessibility_services com.gathin.tvhome/.HomeKeyService
@@ -50,6 +54,9 @@ public class HomeKeyService extends AccessibilityService {
     private BroadcastReceiver unlockReceiver;
     /** The stock launcher's HOME activities (stock_home_redirect), disabled ones included. */
     private final Set<String> stockHome = new HashSet<>();
+    /** Fire OS: only the home screen is redirected, and not while Settings is opening (FireOs). */
+    private boolean fire;
+    private long lastRedirect;
 
     @Override
     protected void onServiceConnected() {
@@ -105,14 +112,21 @@ public class HomeKeyService extends AccessibilityService {
         stockHome.clear();
         if (!config.stockHomeRedirect.isEmpty()) {
             Intent home = new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME).setPackage(config.stockHomeRedirect);
+            List<String> declared = new ArrayList<>();
             for (ResolveInfo ri : getPackageManager().queryIntentActivities(home, PackageManager.MATCH_DISABLED_COMPONENTS)) {
-                stockHome.add(ri.activityInfo.name);
+                declared.add(ri.activityInfo.name);
+                // An activity-alias reports its target's class in window events.
+                if (ri.activityInfo.targetActivity != null) declared.add(ri.activityInfo.targetActivity);
             }
+            fire = FireOs.LAUNCHER.equals(config.stockHomeRedirect);
+            stockHome.addAll(fire ? FireOs.homeClasses(declared) : declared);
         }
-        // home_key_service.xml subscribes to no events, so the redirect asks for window changes only when it is on.
+        // home_key_service.xml subscribes to no events, so the redirect asks for window changes only when it is on,
+        // and only from the stock launcher's package: other apps' window changes never wake this process.
         AccessibilityServiceInfo info = getServiceInfo();
         if (info != null && !stockHome.isEmpty()) {
             info.eventTypes |= AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED;
+            info.packageNames = new String[]{config.stockHomeRedirect};
             setServiceInfo(info);
         }
         holdAppKeys = RemoteKeys.parseHoldAppKeys(config.appKeys);
@@ -137,6 +151,7 @@ public class HomeKeyService extends AccessibilityService {
                 Intent open = settingsPanel ? new Intent(this, QuickSettingsActivity.class)
                         : SystemSettings.intent(this, Settings.ACTION_SETTINGS);
                 try {
+                    FireOs.opening(open);
                     startActivity(open.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
                 } catch (ActivityNotFoundException | SecurityException unavailable) {
                     Toast.makeText(this, R.string.not_available, Toast.LENGTH_SHORT).show();
@@ -169,9 +184,17 @@ public class HomeKeyService extends AccessibilityService {
         // stock_home_redirect: the firmware turned the stock launcher back on and its home screen came up.
         if (stockHome.isEmpty() || event.getEventType() != AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) return;
         CharSequence cls = event.getClassName();
-        if (cls != null && stockHome.contains(cls.toString())) {
+        if (cls == null || !stockHome.contains(cls.toString())) return;
+        long now = SystemClock.uptimeMillis();
+        if (fire && (FireOs.settingsQuiet(now) || now - lastRedirect < FireOs.DEBOUNCE_MS)) return;
+        lastRedirect = now;
+        try {
+            // No transition: Amazon's home is on screen for as short as possible.
             startActivity(new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME).setPackage(getPackageName())
-                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED));
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED
+                            | (fire ? Intent.FLAG_ACTIVITY_NO_ANIMATION : 0)));
+        } catch (ActivityNotFoundException | SecurityException unavailable) {
+            // Redirect refused: the stock home stays, as without this helper.
         }
     }
 
