@@ -1,16 +1,23 @@
 name: Fire APK
 
+# Every push to main builds a signed APK (artifact); a v* tag also publishes it as a release,
+# under a fixed name, so fire-install.sh --release can fetch the latest one.
 on:
-  workflow_dispatch:
   push:
-    branches: [fire-os-8]
+    branches: [main]
+    tags: ["v*"]
+    paths-ignore: ["**.md", "docs/**", "themes/**", "addons/**"]
+  workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   apk:
     runs-on: ubuntu-latest
+    env:
+      KEYSTORE_B64: ${{ secrets.SIGNING_KEYSTORE_B64 }}
+      SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -21,12 +28,26 @@ jobs:
         with:
           packages: platforms;android-34 build-tools;34.0.0
       - uses: gradle/actions/setup-gradle@v4
+      - name: Signing key
+        if: env.KEYSTORE_B64 != ''
+        run: |
+          echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/fire.jks"
+          echo "SIGNING_KEYSTORE=$RUNNER_TEMP/fire.jks" >> "$GITHUB_ENV"
+      - name: No signing key
+        if: env.KEYSTORE_B64 == ''
+        run: echo "::warning::SIGNING_KEYSTORE_B64 not set; debug key, a new one each run, so updates need an uninstall"
       - name: Unit tests and release build
         working-directory: launcher
         run: |
           chmod +x gradlew
           ./gradlew --no-daemon testReleaseUnitTest assembleRelease
+          cp app/build/outputs/apk/release/app-release.apk "$RUNNER_TEMP/cleanyourtv-fire.apk"
       - uses: actions/upload-artifact@v4
         with:
-          name: cleanyourtv-fire-apk
-          path: launcher/app/build/outputs/apk/release/app-release.apk
+          name: cleanyourtv-fire-${{ github.sha }}
+          path: ${{ runner.temp }}/cleanyourtv-fire.apk
+      - if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ runner.temp }}/cleanyourtv-fire.apk
+          generate_release_notes: true

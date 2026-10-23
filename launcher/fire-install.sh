@@ -6,6 +6,7 @@
 #   FIRE_HOST=192.168.1.50 ./fire-install.sh              build, install, enable the redirect
 #   FIRE_HOST=... ./fire-install.sh --theme ../themes/x   same, then push x/config.json (dock, vpn_app, ...)
 #   FIRE_HOST=... ./fire-install.sh --apk app-release.apk install a prebuilt APK, no build
+#   FIRE_HOST=... ./fire-install.sh --release owner/repo  install the latest release APK (fire-apk.yml)
 #   FIRE_HOST=... ./fire-install.sh --restore             redirect off, launcher uninstalled, Amazon home back
 # FIRE_HOST unset: uses the single device adb already sees (USB or an earlier adb connect).
 set -euo pipefail
@@ -14,7 +15,8 @@ PKG=com.gathin.tvhome
 SVC=$PKG/.HomeKeyService
 DIR=/sdcard/Android/data/$PKG/files
 APK=app/build/outputs/apk/release/app-release.apk
-THEME="" BUILD=1 MODE=install
+THEME="" BUILD=1 MODE=install REPO=""
+
 
 log() { printf '%s %s fire-install.sh.%s:%s: %s\n' "$(date +'%y/%m/%d %H:%M:%S')" "$1" "${FUNCNAME[1]:-main}" "${BASH_LINENO[0]}" "$2"; }
 die() { log ERROR "$1"; exit 1; }
@@ -24,6 +26,7 @@ while [ $# -gt 0 ]; do
   case "$1" in
     --theme) THEME="${2:?--theme needs a folder}"; shift 2 ;;
     --apk) APK="${2:?--apk needs a file}"; BUILD=0; shift 2 ;;
+    --release) REPO="${2:?--release needs owner/repo}"; BUILD=2; shift 2 ;;
     --restore) MODE=restore; shift ;;
     *) die "unknown option $1" ;;
   esac
@@ -82,10 +85,26 @@ install() {
     [ -f local.properties ] || [ -z "${ANDROID_HOME:-}" ] || echo "sdk.dir=$ANDROID_HOME" > local.properties
     log INFO "building release APK"
     ./gradlew assembleRelease -q --console=plain
+  elif [ "$BUILD" = 2 ]; then
+    APK="$(mktemp -d)/cleanyourtv-fire.apk"
+    log INFO "downloading latest release of $REPO"
+    if command -v gh >/dev/null && gh auth status >/dev/null 2>&1; then
+      gh release download -R "$REPO" -p cleanyourtv-fire.apk -O "$APK" || die "no release APK in $REPO"
+    else
+      curl -fsSL -o "$APK" "https://github.com/$REPO/releases/latest/download/cleanyourtv-fire.apk" \
+        || die "download failed (private repo: install and log in to gh)"
+    fi
   fi
   [ -f "$APK" ] || die "APK not found: $APK"
   log INFO "installing $(basename "$APK") ($(( $(wc -c < "$APK") / 1024 )) KB)"
-  adb install -r "$APK" | grep -q Success || die "adb install failed"
+  local out; out=$(adb install -r "$APK" 2>&1 || true)
+  if [[ "$out" == *UPDATE_INCOMPATIBLE* ]]; then
+    # Signed with another key (local debug build vs CI key): only a clean install works (pass --theme again).
+    log WARN "different signing key: uninstalling the old launcher first"
+    service_off; sh_ "pm uninstall $PKG" >/dev/null
+    out=$(adb install "$APK" 2>&1 || true)
+  fi
+  [[ "$out" == *Success* ]] || die "adb install failed: ${out##*$'\n'}"
   sh_ "pm grant $PKG android.permission.WRITE_SECURE_SETTINGS; pm grant $PKG android.permission.ACCESS_FINE_LOCATION 2>/dev/null; \
 cmd appops set $PKG AUTO_START allow 2>/dev/null; cmd package compile -m speed -f $PKG" >/dev/null || true
   [ -z "$THEME" ] || push_theme
