@@ -11,7 +11,7 @@ public class ThemesTest {
     }
 
     @Test public void nextCyclesAndRecovers() {
-        assertEquals("clean", Themes.next("fire"));
+        assertEquals("glass", Themes.next("fire"));
         assertEquals("fire", Themes.next("stock"));
         assertEquals("fire", Themes.next("unknown"));
     }

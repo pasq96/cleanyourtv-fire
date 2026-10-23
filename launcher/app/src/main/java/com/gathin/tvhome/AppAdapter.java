@@ -314,7 +314,17 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 fresh.add(new Entry(label, component, banner, icon));
             }
         }
+        final boolean byRecent = Themes.sortRecent(ctx);
         Collections.sort(fresh, (a, b) -> {
+            if (byRecent) {
+                // Recently opened order: dock apps and cards first, then the last used, then alphabetical.
+                int ra = favourites.indexOf(a.pkg), rb = favourites.indexOf(b.pkg);
+                if (ra >= 0 || rb >= 0) return ra < 0 ? 1 : rb < 0 ? -1 : Integer.compare(ra, rb);
+                boolean ka = a.kind == Entry.CARD, kb = b.kind == Entry.CARD;
+                if (ka != kb) return ka ? -1 : 1;
+                int recent = Long.compare(LastOpened.get(ctx, b.pkg), LastOpened.get(ctx, a.pkg));
+                return recent != 0 ? recent : a.label.compareToIgnoreCase(b.label);
+            }
             // The owner's own order first; tiles it does not know (new installs) follow by the rule below.
             int saved = Order.compare(savedRanks, a.component.flattenToShortString(), b.component.flattenToShortString());
             if (saved != 0) return saved;
@@ -511,7 +521,7 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         }
         try {
             ctx.startActivity(i);
-            if (cinematic) LastOpened.record(ctx, e.pkg);
+            LastOpened.record(ctx, e.pkg);
             if (advancedEffects && !reducedMotion && ctx instanceof Activity) {
                 ((Activity) ctx).overridePendingTransition(R.anim.app_open_enter, R.anim.app_open_exit);
             }

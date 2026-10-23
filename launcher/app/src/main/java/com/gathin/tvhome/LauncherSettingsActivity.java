@@ -28,6 +28,7 @@ public final class LauncherSettingsActivity extends Activity {
     private TextView advancedChoice;
     private TextView followThemeChoice;
     private TextView themeChoice;
+    private TextView sortChoice;
     private int columns;
     private int rowsBelowDock;
     private int dockOpacity;
@@ -118,6 +119,22 @@ public final class LauncherSettingsActivity extends Activity {
                         .setNegativeButton(android.R.string.cancel, null)
                         .show();
             }
+        });
+        sortChoice = findViewById(R.id.sortChoice);
+        sortChoice.setOnClickListener(v -> {
+            choices.edit().putBoolean(Themes.SORT_RECENT_KEY, !Themes.sortRecent(this)).apply();
+            changed();
+            refresh();
+        });
+        findViewById(R.id.backupChoice).setOnClickListener(v -> {
+            File f = Backup.file(this);
+            Toast.makeText(this, Backup.export(this) ? getString(R.string.backup_done, f.getAbsolutePath())
+                    : getString(R.string.backup_failed), Toast.LENGTH_LONG).show();
+        });
+        findViewById(R.id.restoreChoice).setOnClickListener(v -> {
+            boolean ok = Backup.restore(this);
+            Toast.makeText(this, ok ? R.string.restore_done : R.string.restore_failed, Toast.LENGTH_LONG).show();
+            if (ok) { setResult(RESULT_OK); recreate(); }
         });
         themeChoice = findViewById(R.id.themeChoice);
         themeChoice.setOnClickListener(v -> {
@@ -250,6 +267,8 @@ public final class LauncherSettingsActivity extends Activity {
                         : wallpaperCurrent != null ? wallpaperCurrent
                         : getString(R.string.wallpaper_theme_default)));
         followThemeChoice.setSelected(!hasOnTvChoices());
+        sortChoice.setText(getString(R.string.sort_state,
+                getString(Themes.sortRecent(this) ? R.string.sort_recent : R.string.sort_manual)));
         File dir = Config.dir(this);
         boolean pushed = dir != null && new File(dir, Config.FILE_NAME).isFile();
         String name = getString(Themes.label(Themes.chosen(choices, FireOs.is(this))));

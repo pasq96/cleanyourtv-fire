@@ -1,0 +1,12 @@
+Lcom/gathin/tvhome/MainActivity;
+HSPLcom/gathin/tvhome/MainActivity;->*(**)**
+HSPLcom/gathin/tvhome/AppAdapter;->*(**)**
+HSPLcom/gathin/tvhome/AppAdapter$*;->*(**)**
+HSPLcom/gathin/tvhome/Config;->*(**)**
+HSPLcom/gathin/tvhome/GridNavigation;->*(**)**
+HSPLcom/gathin/tvhome/Order;->*(**)**
+HSPLcom/gathin/tvhome/LibraryApps;->*(**)**
+HSPLcom/gathin/tvhome/IconBanner;->*(**)**
+HSPLcom/gathin/tvhome/Themes;->*(**)**
+HSPLcom/gathin/tvhome/HomeKeyService;->*(**)**
+HSPLcom/gathin/tvhome/FireOs;->*(**)**

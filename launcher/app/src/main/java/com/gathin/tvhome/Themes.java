@@ -15,9 +15,16 @@ import java.nio.charset.StandardCharsets;
  */
 final class Themes {
     static final String KEY = "theme_choice";
-    static final String[] IDS = {"fire", "clean", "stock"};
+    static final String[] IDS = {"fire", "glass", "aurora", "clean", "stock"};
+
+    static final String SORT_RECENT_KEY = "sort_recent";
 
     private Themes() {}
+
+    /** Tiles after the dock ordered by last opened instead of the saved manual order (Launcher settings). */
+    static boolean sortRecent(Context ctx) {
+        return ctx.getSharedPreferences(Config.SETTINGS_NAME, Context.MODE_PRIVATE).getBoolean(SORT_RECENT_KEY, false);
+    }
 
     static String defaultId(boolean fireOs) {
         return fireOs ? IDS[0] : IDS[IDS.length - 1];
@@ -37,6 +44,8 @@ final class Themes {
     static int label(String id) {
         switch (id) {
             case "fire": return R.string.theme_fire;
+            case "glass": return R.string.theme_glass;
+            case "aurora": return R.string.theme_aurora;
             case "clean": return R.string.theme_clean;
             default: return R.string.theme_stock;
         }
@@ -45,6 +54,8 @@ final class Themes {
     private static int raw(String id) {
         switch (id) {
             case "fire": return R.raw.theme_fire;
+            case "glass": return R.raw.theme_glass;
+            case "aurora": return R.raw.theme_aurora;
             case "clean": return R.raw.theme_clean;
             default: return R.raw.theme_stock;
         }

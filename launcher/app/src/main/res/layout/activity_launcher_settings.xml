@@ -132,6 +132,23 @@
             android:textSize="14sp" />
 
         <TextView
+            android:id="@+id/sortChoice"
+            style="@style/SettingsRow"
+            android:layout_marginTop="18dp" />
+
+        <TextView
+            android:id="@+id/backupChoice"
+            style="@style/SettingsRow"
+            android:layout_marginTop="18dp"
+            android:text="@string/backup" />
+
+        <TextView
+            android:id="@+id/restoreChoice"
+            style="@style/SettingsRow"
+            android:layout_marginTop="10dp"
+            android:text="@string/restore" />
+
+        <TextView
             android:id="@+id/defaultHomeChoice"
             style="@style/SettingsRow"
             android:layout_marginTop="28dp"

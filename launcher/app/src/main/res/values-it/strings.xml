@@ -111,4 +111,15 @@
     <string name="theme_fire">Fire (dock Stremio, SmartTube, Sparkle)</string>
     <string name="theme_clean">Pulito (nero, 6 colonne)</string>
     <string name="theme_stock">Predefinito</string>
+    <string name="sort_state">Ordine: %1$s</string>
+    <string name="sort_manual">manuale</string>
+    <string name="sort_recent">ultime aperte</string>
+    <string name="backup">Salva backup impostazioni</string>
+    <string name="restore">Ripristina impostazioni</string>
+    <string name="backup_done">Backup salvato: %1$s</string>
+    <string name="backup_failed">Backup non riuscito</string>
+    <string name="restore_done">Impostazioni ripristinate</string>
+    <string name="restore_failed">Nessun backup trovato o illeggibile</string>
+    <string name="theme_glass">Glass (dock vetro, bagliore)</string>
+    <string name="theme_aurora">Aurora (blu scuro, 6 colonne)</string>
 </resources>
