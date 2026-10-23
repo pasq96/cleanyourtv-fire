@@ -261,4 +261,9 @@
     <string name="wifi_name_hidden">hidden by the system</string>
     <string name="wifi_name_cmd">Location is off. From a computer: adb shell pm grant com.gathin.tvhome android.permission.WRITE_SECURE_SETTINGS, then press this row again (or adb shell settings put secure location_mode 3).</string>
     <string name="wifi_name_loc">Permission and location are on. If the name is still missing, reconnect to the network.</string>
+    <string name="lbl_banner">Banner style</string>
+    <string name="lbl_animations">Animations</string>
+    <string name="lbl_sort">App order</string>
+    <string name="lbl_units">Temperature</string>
+    <string name="lbl_lang">Language</string>
 </resources>

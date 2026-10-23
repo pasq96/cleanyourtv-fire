@@ -33,11 +33,10 @@ public final class LauncherSettingsActivity extends Activity {
     private static final int[] DOCK_OPACITIES = {100, 70, 50, 30};
     private final TextView[] dockChoices = new TextView[DOCK_OPACITIES.length];
     private TextView wallpaperChoice;
-    private TextView animationsChoice;
-    private TextView advancedChoice;
+    private View advancedBlock;
     private TextView followThemeChoice;
     private TextView themeChoice;
-    private TextView sortChoice, vpnChoice, bannerChoice, languageChoice, wifiNameChoice, weatherUnitsChoice;
+    private TextView vpnChoice, wifiNameChoice;
     private final TextView[] liftChoices = new TextView[4];
     private final List<Runnable> toggleRefreshers = new ArrayList<>();
     private int columns;
@@ -118,28 +117,6 @@ public final class LauncherSettingsActivity extends Activity {
         }
         wallpaperChoice = findViewById(R.id.wallpaperChoice);
         wallpaperChoice.setOnClickListener(v -> showWallpaperPicker());
-        animationsChoice = findViewById(R.id.animationsChoice);
-        animationsChoice.setOnClickListener(v -> {
-            animations = !animations;
-            if (!animations) advancedEffects = false;
-            choices.edit().putBoolean("animations", animations)
-                    .putBoolean("advanced_effects", advancedEffects).apply();
-            changed();
-            refresh();
-        });
-        advancedChoice = findViewById(R.id.advancedChoice);
-        advancedChoice.setOnClickListener(v -> {
-            if (advancedEffects) {
-                setAdvanced(false);
-            } else {
-                new AlertDialog.Builder(this, R.style.GlassDialog)
-                        .setTitle(R.string.advanced_effects)
-                        .setMessage(R.string.advanced_effects_warning)
-                        .setPositiveButton(R.string.enable, (dialog, which) -> setAdvanced(true))
-                        .setNegativeButton(android.R.string.cancel, null)
-                        .show();
-            }
-        });
         vpnChoice = findViewById(R.id.vpnChoice);
         vpnChoice.setOnClickListener(v -> pickVpnApps());
         findViewById(R.id.hiddenChoice).setOnClickListener(v -> pickHiddenApps());
@@ -169,21 +146,8 @@ public final class LauncherSettingsActivity extends Activity {
                 refresh();
             });
         }
-        languageChoice = findViewById(R.id.languageChoice);
-        languageChoice.setOnClickListener(v -> {
-            choices.edit().putString(Lang.KEY, Lang.next(Lang.chosen(this))).commit();
-            changed();
-            recreate();
-        });
         findViewById(R.id.weatherKeyChoice).setOnClickListener(v -> askText(Weather.KEY_API, R.string.weather_key));
         findViewById(R.id.weatherCityChoice).setOnClickListener(v -> askText(Weather.KEY_CITY, R.string.weather_city));
-        weatherUnitsChoice = findViewById(R.id.weatherUnitsChoice);
-        weatherUnitsChoice.setOnClickListener(v -> {
-            choices.edit().putString(Weather.KEY_UNITS, Weather.fahrenheit(choices) ? "c" : "f").apply();
-            Weather.forget(this);
-            changed();
-            refresh();
-        });
         wifiNameChoice = findViewById(R.id.wifiNameChoice);
         wifiNameChoice.setOnClickListener(v -> {
             if (locationGranted()) {
@@ -199,12 +163,6 @@ public final class LauncherSettingsActivity extends Activity {
                 Toast.makeText(this, R.string.wifi_name_adb, Toast.LENGTH_LONG).show();
             }
         });
-        bannerChoice = findViewById(R.id.bannerChoice);
-        bannerChoice.setOnClickListener(v -> {
-            choices.edit().putInt(Themes.BANNER_STYLE_KEY, (Themes.bannerStyle(this) + 1) % 3).apply();
-            changed();
-            refresh();
-        });
         LinearLayout toggles = findViewById(R.id.togglesContainer);
         addToggle(toggles, "show_all_apps", R.string.opt_show_all_apps, R.string.d_show_all, config.showAllApps);
         addToggle(toggles, "long_press_move", R.string.opt_long_press_move, R.string.d_long_press, config.longPressMove);
@@ -214,12 +172,44 @@ public final class LauncherSettingsActivity extends Activity {
         addToggle(buttons, "show_network_pill", R.string.opt_wifi, 0, config.showNetworkPill);
         addToggle(buttons, Pills.SHOW_POWER_KEY, R.string.opt_power, 0, true);
         addPillStyles((LinearLayout) findViewById(R.id.pillsContainer), config);
-        sortChoice = findViewById(R.id.sortChoice);
-        sortChoice.setOnClickListener(v -> {
-            choices.edit().putBoolean(Themes.SORT_RECENT_KEY, !Themes.sortRecent(this)).apply();
-            changed();
-            refresh();
-        });
+        addSegmented(findViewById(R.id.segBanner), R.string.lbl_banner, R.string.d_banner,
+                new int[]{R.string.banner_off, R.string.banner_stretch, R.string.banner_gradient},
+                () -> Themes.bannerStyle(this), i -> choices.edit().putInt(Themes.BANNER_STYLE_KEY, i).apply());
+        addSegmented(findViewById(R.id.segAnimations), R.string.lbl_animations, 0, new int[]{R.string.on, R.string.off},
+                () -> animations ? 0 : 1, i -> {
+                    animations = i == 0;
+                    if (!animations) advancedEffects = false;
+                    choices.edit().putBoolean("animations", animations).putBoolean("advanced_effects", advancedEffects).apply();
+                });
+        advancedBlock = addSegmented(findViewById(R.id.segAdvanced), R.string.advanced_effects, R.string.d_advanced,
+                new int[]{R.string.on, R.string.off}, () -> advancedEffects ? 0 : 1, i -> {
+                    if (!animations || (i == 0) == advancedEffects) return;
+                    if (i == 1) {
+                        setAdvanced(false);
+                    } else {
+                        new AlertDialog.Builder(this, R.style.GlassDialog)
+                                .setTitle(R.string.advanced_effects)
+                                .setMessage(R.string.advanced_effects_warning)
+                                .setPositiveButton(R.string.enable, (dialog, which) -> setAdvanced(true))
+                                .setNegativeButton(android.R.string.cancel, null)
+                                .show();
+                    }
+                });
+        addSegmented(findViewById(R.id.segSort), R.string.lbl_sort, 0, new int[]{R.string.sort_manual, R.string.sort_recent},
+                () -> Themes.sortRecent(this) ? 1 : 0, i -> choices.edit().putBoolean(Themes.SORT_RECENT_KEY, i == 1).apply());
+        addSegmented(findViewById(R.id.segUnits), R.string.lbl_units, 0, new int[]{R.string.weather_celsius, R.string.weather_fahrenheit},
+                () -> Weather.fahrenheit(choices) ? 1 : 0, i -> {
+                    choices.edit().putString(Weather.KEY_UNITS, i == 1 ? "f" : "c").apply();
+                    Weather.forget(this);
+                });
+        addSegmented(findViewById(R.id.segLanguage), R.string.lbl_lang, 0,
+                new int[]{R.string.lang_system, R.string.lang_en, R.string.lang_it},
+                () -> Arrays.asList(Lang.IDS).indexOf(Lang.chosen(this)), i -> {
+                    if (Lang.IDS[i].equals(Lang.chosen(this))) return;
+                    choices.edit().putString(Lang.KEY, Lang.IDS[i]).commit();
+                    changed();
+                    recreate();
+                });
         findViewById(R.id.backupChoice).setOnClickListener(v -> {
             File f = Backup.file(this);
             Toast.makeText(this, Backup.export(this) ? getString(R.string.backup_done, f.getAbsolutePath())
@@ -357,12 +347,7 @@ public final class LauncherSettingsActivity extends Activity {
         for (int i = 0; i < dockChoices.length; i++) {
             dockChoices[i].setSelected(dockOpacity == DOCK_OPACITIES[i]);
         }
-        animationsChoice.setText(getString(R.string.animations_state,
-                getString(animations ? R.string.on : R.string.off)));
-        advancedChoice.setText(getString(R.string.advanced_effects_state,
-                getString(advancedEffects ? R.string.on : R.string.off)));
-        advancedChoice.setEnabled(animations);
-        advancedChoice.setAlpha(animations ? 1f : 0.5f);
+        advancedBlock.setAlpha(animations ? 1f : 0.45f);
         String wallpaperCurrent = choices.getString(Config.WALLPAPER_CHOICE_KEY, null);
         wallpaperChoice.setText(getString(R.string.wallpaper_state,
                 "none".equals(wallpaperCurrent) ? getString(R.string.wallpaper_none)
@@ -374,18 +359,10 @@ public final class LauncherSettingsActivity extends Activity {
                 wkey.isEmpty() ? getString(R.string.weather_unset) : getString(R.string.weather_set)));
         ((TextView) findViewById(R.id.weatherCityChoice)).setText(getString(R.string.weather_city_state,
                 wcity.isEmpty() ? getString(R.string.weather_unset) : wcity));
-        weatherUnitsChoice.setText(getString(R.string.weather_units_state,
-                getString(Weather.fahrenheit(choices) ? R.string.weather_fahrenheit : R.string.weather_celsius)));
         wifiNameChoice.setText(getString(R.string.wifi_name_state,
                 getString(!locationGranted() ? R.string.wifi_name_ask : !WifiName.locationOn(this) ? R.string.wifi_name_off
                         : WifiName.read(this) != null ? R.string.wifi_name_ok : R.string.wifi_name_hidden)));
-        int style = Themes.bannerStyle(this);
-        bannerChoice.setText(getString(R.string.banner_state, getString(style == Themes.BANNER_STRETCH
-                ? R.string.banner_stretch : style == Themes.BANNER_GRADIENT ? R.string.banner_gradient : R.string.banner_off)));
         for (int i = 0; i < liftChoices.length; i++) liftChoices[i].setSelected(choices.getInt("dock_lift", 1) == i);
-        String lang = Lang.chosen(this);
-        languageChoice.setText(getString(R.string.lang_state, getString(lang.equals("en") ? R.string.lang_en
-                : lang.equals("it") ? R.string.lang_it : R.string.lang_system)));
         for (Runnable r : toggleRefreshers) r.run();
         String vpns = choices.getString(Config.VPN_APP_KEY, null);
         if (vpns == null) vpns = themeVpnApp;
@@ -393,8 +370,6 @@ public final class LauncherSettingsActivity extends Activity {
         for (String pkg : vpns.split(",")) if (!pkg.trim().isEmpty()) names.add(AppActions.label(this, pkg.trim()));
         vpnChoice.setText(getString(R.string.vpn_state, names.isEmpty() ? getString(R.string.vpn_none)
                 : android.text.TextUtils.join(", ", names)));
-        sortChoice.setText(getString(R.string.sort_state,
-                getString(Themes.sortRecent(this) ? R.string.sort_recent : R.string.sort_manual)));
         File dir = Config.dir(this);
         boolean pushed = dir != null && new File(dir, Config.FILE_NAME).isFile();
         String name = getString(Themes.label(Themes.chosen(choices, FireOs.is(this))));
@@ -425,80 +400,67 @@ public final class LauncherSettingsActivity extends Activity {
                 .setNegativeButton(android.R.string.cancel, null).show();
     }
 
-    /** One row per top pill: tap to switch it between icon with label and icon only, independently of the others. */
+    /**
+     * One setting as a label and a capsule of options (a note under the label only when needed). A tap saves the
+     * option through set, then everything refreshes. Returns the block, so a caller can dim it.
+     */
+    private View addSegmented(LinearLayout parent, int label, int note, int[] options,
+                              java.util.function.IntSupplier current, java.util.function.IntConsumer set) {
+        float d = getResources().getDisplayMetrics().density;
+        LinearLayout block = new LinearLayout(this);
+        block.setOrientation(LinearLayout.HORIZONTAL);
+        block.setGravity(android.view.Gravity.CENTER_VERTICAL);
+        LinearLayout.LayoutParams blockLp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        blockLp.topMargin = (int) (12 * d);
+        LinearLayout text = new LinearLayout(this);
+        text.setOrientation(LinearLayout.VERTICAL);
+        TextView name = new TextView(this, null, 0, R.style.SettingsLabel);
+        name.setText(label);
+        text.addView(name);
+        if (note != 0) {
+            TextView hint = new TextView(this, null, 0, R.style.SettingsNote);
+            hint.setText(note);
+            text.addView(hint);
+        }
+        block.addView(text, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1));
+        LinearLayout capsule = new LinearLayout(this, null, 0, R.style.SettingsSegments);
+        final TextView[] segs = new TextView[options.length];
+        for (int i = 0; i < options.length; i++) {
+            final int index = i;
+            segs[i] = new TextView(this, null, 0, R.style.SettingsSeg);
+            String option = getString(options[i]);
+            segs[i].setText(option.substring(0, 1).toUpperCase() + option.substring(1));
+            segs[i].setOnClickListener(v -> {
+                if (current.getAsInt() == index) return;
+                set.accept(index);
+                changed();
+                refresh();
+            });
+            capsule.addView(segs[i], new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, (int) (44 * d)));
+        }
+        block.addView(capsule, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        toggleRefreshers.add(() -> {
+            for (int i = 0; i < segs.length; i++) segs[i].setSelected(current.getAsInt() == i);
+        });
+        parent.addView(block, blockLp);
+        return block;
+    }
+
+    /** One setting per top pill: icon with label, or icon only, independently of the others. */
     private void addPillStyles(LinearLayout parent, Config config) {
         int[] names = {R.string.pill_inputs, R.string.pill_wifi, R.string.pill_vpn, R.string.pill_launcher,
                 R.string.pill_settings, R.string.pill_power};
-        float d = getResources().getDisplayMetrics().density;
         for (int i = 0; i < Pills.IDS.length; i++) {
             final String id = Pills.IDS[i];
-            final int name = names[i];
-            TextView row = new TextView(this);
-            row.setFocusable(true);
-            row.setClickable(true);
-            row.setBackgroundResource(R.drawable.settings_choice_bg);
-            row.setTextColor(getResources().getColorStateList(R.drawable.pill_text, getTheme()));
-            row.setTextSize(18);
-            row.setGravity(android.view.Gravity.CENTER_VERTICAL);
-            row.setPadding((int) (20 * d), 0, (int) (20 * d), 0);
-            row.setMinHeight((int) (52 * d));
-            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-            lp.topMargin = (int) (12 * d);
-            Runnable show = () -> row.setText(getString(R.string.pill_state, getString(name),
-                    getString(Pills.compact(choices, config, id) ? R.string.pill_compact : R.string.pill_full)));
-            row.setOnClickListener(v -> {
-                Pills.set(choices, id, !Pills.compact(choices, config, id));
-                changed();
-                show.run();
-            });
-            toggleRefreshers.add(show);
-            parent.addView(row, lp);
-            show.run();
+            addSegmented(parent, names[i], 0, new int[]{R.string.pill_full, R.string.pill_compact},
+                    () -> Pills.compact(choices, config, id) ? 1 : 0, v -> Pills.set(choices, id, v == 1));
         }
     }
 
-    /** An on/off row saved as a boolean choice that Config reads under the same key; desc 0 means no note. */
+    /** An on/off setting saved as a boolean choice that Config reads under the same key; desc 0 means no note. */
     private void addToggle(LinearLayout parent, String key, int label, int desc, boolean theme) {
-        float d = getResources().getDisplayMetrics().density;
-        LinearLayout block = new LinearLayout(this);
-        block.setOrientation(LinearLayout.VERTICAL);
-        LinearLayout.LayoutParams blockLp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        blockLp.topMargin = (int) (12 * d);
-        LinearLayout row = new LinearLayout(this);
-        row.setOrientation(LinearLayout.HORIZONTAL);
-        row.setGravity(android.view.Gravity.CENTER_VERTICAL);
-        row.setFocusable(true);
-        row.setClickable(true);
-        row.setBackgroundResource(R.drawable.settings_choice_bg);
-        row.setPadding((int) (20 * d), 0, (int) (20 * d), 0);
-        row.setMinimumHeight((int) (52 * d));
-        TextView name = new TextView(this), state = new TextView(this);
-        for (TextView t : new TextView[]{name, state}) {
-            t.setTextColor(getResources().getColorStateList(R.drawable.pill_text, getTheme()));
-            t.setTextSize(18);
-            t.setDuplicateParentStateEnabled(true);
-        }
-        name.setText(label);
-        row.addView(name, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1));
-        row.addView(state, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-        block.addView(row, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-        if (desc != 0) {
-            TextView note = new TextView(this);
-            note.setText(desc);
-            note.setTextColor(0xFF9FB0BF);
-            note.setTextSize(13);
-            note.setPadding((int) (20 * d), (int) (4 * d), 0, 0);
-            block.addView(note);
-        }
-        Runnable show = () -> state.setText(choices.getBoolean(key, theme) ? R.string.on : R.string.off);
-        row.setOnClickListener(v -> {
-            choices.edit().putBoolean(key, !choices.getBoolean(key, theme)).apply();
-            changed();
-            show.run();
-        });
-        toggleRefreshers.add(show);
-        parent.addView(block, blockLp);
-        show.run();
+        addSegmented(parent, label, desc, new int[]{R.string.on, R.string.off},
+                () -> choices.getBoolean(key, theme) ? 0 : 1, i -> choices.edit().putBoolean(key, i == 0).apply());
     }
 
     /** Launchable apps that are not hidden by the system, sorted by name: package -> label. */

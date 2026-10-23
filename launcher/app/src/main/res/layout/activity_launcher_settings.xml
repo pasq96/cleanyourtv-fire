@@ -49,14 +49,10 @@
                     style="@style/SettingsRow" />
             </LinearLayout>
             <LinearLayout
-                style="@style/SettingsBlock">
-                <TextView
-                    android:id="@+id/bannerChoice"
-                    style="@style/SettingsRow" />
-                <TextView
-                    style="@style/SettingsNote"
-                    android:text="@string/d_banner" />
-            </LinearLayout>
+                android:id="@+id/segBanner"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
             <LinearLayout
                 style="@style/SettingsBlock"
                 android:gravity="center_vertical"
@@ -79,20 +75,15 @@
                 </LinearLayout>
             </LinearLayout>
             <LinearLayout
-                style="@style/SettingsBlock">
-                <TextView
-                    android:id="@+id/animationsChoice"
-                    style="@style/SettingsRow" />
-            </LinearLayout>
+                android:id="@+id/segAnimations"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
             <LinearLayout
-                style="@style/SettingsBlock">
-                <TextView
-                    android:id="@+id/advancedChoice"
-                    style="@style/SettingsRow" />
-                <TextView
-                    style="@style/SettingsNote"
-                    android:text="@string/d_advanced" />
-            </LinearLayout>
+                android:id="@+id/segAdvanced"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
         </LinearLayout>
         <TextView
             style="@style/SettingsSection"
@@ -176,14 +167,10 @@
         <LinearLayout
             style="@style/SettingsCard">
             <LinearLayout
-                style="@style/SettingsBlock">
-                <TextView
-                    android:id="@+id/sortChoice"
-                    style="@style/SettingsRow" />
-                <TextView
-                    style="@style/SettingsNote"
-                    android:text="@string/d_sort" />
-            </LinearLayout>
+                android:id="@+id/segSort"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
             <LinearLayout
                 style="@style/SettingsBlock">
                 <TextView
@@ -255,11 +242,10 @@
                     android:text="@string/d_weather_city" />
             </LinearLayout>
             <LinearLayout
-                style="@style/SettingsBlock">
-                <TextView
-                    android:id="@+id/weatherUnitsChoice"
-                    style="@style/SettingsRow" />
-            </LinearLayout>
+                android:id="@+id/segUnits"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
         </LinearLayout>
         <TextView
             style="@style/SettingsSection"
@@ -307,11 +293,10 @@
         <LinearLayout
             style="@style/SettingsCard">
             <LinearLayout
-                style="@style/SettingsBlock">
-                <TextView
-                    android:id="@+id/languageChoice"
-                    style="@style/SettingsRow" />
-            </LinearLayout>
+                android:id="@+id/segLanguage"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
             <LinearLayout
                 style="@style/SettingsBlock">
                 <TextView
