@@ -41,12 +41,18 @@
                 <TextView
                     android:id="@+id/themeChoice"
                     style="@style/SettingsRow" />
+                <TextView
+                    style="@style/SettingsNote"
+                    android:text="@string/d_theme" />
             </LinearLayout>
             <LinearLayout
                 style="@style/SettingsBlock">
                 <TextView
                     android:id="@+id/wallpaperChoice"
                     style="@style/SettingsRow" />
+                <TextView
+                    style="@style/SettingsNote"
+                    android:text="@string/d_wallpaper" />
             </LinearLayout>
             <LinearLayout
                 android:id="@+id/segBanner"
@@ -158,6 +164,9 @@
                     android:id="@+id/hiddenChoice"
                     style="@style/SettingsRow"
                     android:text="@string/hidden_apps" />
+                <TextView
+                    style="@style/SettingsNote"
+                    android:text="@string/d_hidden" />
             </LinearLayout>
             <LinearLayout
                 android:id="@+id/togglesContainer"
@@ -239,6 +248,9 @@
                     android:id="@+id/backupChoice"
                     style="@style/SettingsRow"
                 android:text="@string/backup" />
+                <TextView
+                    style="@style/SettingsNote"
+                    android:text="@string/d_backup" />
             </LinearLayout>
             <LinearLayout
                 style="@style/SettingsBlock">
@@ -246,6 +258,9 @@
                     android:id="@+id/restoreChoice"
                     style="@style/SettingsRow"
                 android:text="@string/restore" />
+                <TextView
+                    style="@style/SettingsNote"
+                    android:text="@string/d_restore" />
             </LinearLayout>
             <LinearLayout
                 style="@style/SettingsBlock">
@@ -284,6 +299,9 @@
                     android:id="@+id/defaultHomeChoice"
                     style="@style/SettingsRow"
                 android:text="@string/home_settings" />
+                <TextView
+                    style="@style/SettingsNote"
+                    android:text="@string/d_home" />
             </LinearLayout>
             <LinearLayout
                 style="@style/SettingsBlock">
@@ -291,6 +309,9 @@
                     android:id="@+id/tvSettingsChoice"
                     style="@style/SettingsRow"
                 android:text="@string/tv_settings" />
+                <TextView
+                    style="@style/SettingsNote"
+                    android:text="@string/d_tv" />
             </LinearLayout>
         </LinearLayout>
     </LinearLayout>

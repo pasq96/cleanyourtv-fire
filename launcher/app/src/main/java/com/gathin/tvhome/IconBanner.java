@@ -24,10 +24,11 @@ final class IconBanner {
 
     private IconBanner() {}
 
-    /** @param stretch the whole icon scaled to fill the 16:9 tile (adaptive layers included); else icon on a gradient. */
-    static Drawable make(Resources res, Drawable icon, boolean stretch) {
+    /** @param style a Themes.BANNER_* value: stretched icon, gradient (default here), blurred or glass backdrop. */
+    static Drawable make(Resources res, Drawable icon, int style) {
         if (icon == null) return null;
-        if (stretch) {
+        if (style == Themes.BANNER_BLUR || style == Themes.BANNER_GLASS) return backdrop(res, icon, style == Themes.BANNER_GLASS);
+        if (style == Themes.BANNER_STRETCH) {
             Bitmap filled = Bitmap.createBitmap(W, H, Bitmap.Config.ARGB_8888);
             Canvas fc = new Canvas(filled);
             fc.drawColor(edgeColor(render(icon, 96)));   // under a see-through icon
@@ -70,6 +71,49 @@ final class IconBanner {
             drawCentered(c, icon, size);
             c.restore();
         }
+        return new BitmapDrawable(res, out);
+    }
+
+    /**
+     * Blurred: the icon blown up and softened fills the tile, the sharp rounded icon sits on it. Glass: the icon's
+     * colour as a frosted pane with a light top sheen and a hairline edge, the icon centred on it.
+     */
+    private static Drawable backdrop(Resources res, Drawable icon, boolean glass) {
+        Bitmap out = Bitmap.createBitmap(W, H, Bitmap.Config.ARGB_8888);
+        Canvas c = new Canvas(out);
+        Bitmap src = render(icon, 96);
+        int base = edgeColor(src);
+        Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        paint.setFilterBitmap(true);
+        if (glass) {
+            paint.setShader(new LinearGradient(0, 0, 0, H, shade(base, 1.5f), shade(base, 0.85f), Shader.TileMode.CLAMP));
+            c.drawRect(0, 0, W, H, paint);
+            paint.setShader(new LinearGradient(0, 0, 0, H * 0.55f, 0x4DFFFFFF, 0x00FFFFFF, Shader.TileMode.CLAMP));
+            c.drawRect(0, 0, W, H * 0.55f, paint);
+            paint.setShader(null);
+            paint.setStyle(Paint.Style.STROKE);
+            paint.setStrokeWidth(3f);
+            paint.setColor(0x66FFFFFF);
+            c.drawRect(1.5f, 1.5f, W - 1.5f, H - 1.5f, paint);
+            paint.setStyle(Paint.Style.FILL);
+        } else {
+            Bitmap tiny = Bitmap.createScaledBitmap(src, 10, 10, true);   // down then up: a cheap, even blur
+            c.drawBitmap(tiny, null, new RectF(-W * 0.1f, (H - W * 1.2f) / 2f, W * 1.1f, (H + W * 1.2f) / 2f), paint);
+            c.drawColor(0x66000000);
+        }
+        int size = (int) (H * (glass ? 0.56f : PLAIN_ICON)), left = (W - size) / 2, top = (H - size) / 2;
+        float radius = size * 0.22f;
+        RectF box = new RectF(left, top, left + size, top + size);
+        Paint shadow = new Paint(Paint.ANTI_ALIAS_FLAG);
+        shadow.setColor(base);
+        shadow.setShadowLayer(16f, 0f, 7f, 0x80000000);
+        c.drawRoundRect(box, radius, radius, shadow);
+        Path clip = new Path();
+        clip.addRoundRect(box, radius, radius, Path.Direction.CW);
+        c.save();
+        c.clipPath(clip);
+        drawCentered(c, icon, size);
+        c.restore();
         return new BitmapDrawable(res, out);
     }
 

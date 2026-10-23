@@ -225,4 +225,8 @@
     <string name="dock_pos_1">Bassa</string>
     <string name="dock_pos_2">Media</string>
     <string name="dock_pos_3">Alta</string>
+    <string name="banner_blur">sfocato</string>
+    <string name="banner_glass">vetro</string>
+    <string name="theme_title">Tema</string>
+    <string name="d_power">Apre il menu di alimentazione del sistema.</string>
 </resources>

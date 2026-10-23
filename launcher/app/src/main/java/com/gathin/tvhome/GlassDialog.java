@@ -89,7 +89,7 @@ final class GlassDialog {
 
     /** Rows with a tick when checked. multi: each tap toggles; otherwise a tap picks the row and closes. */
     GlassDialog list(CharSequence[] labels, boolean[] checked, boolean multi, IntConsumer onPick) {
-        tall = true;
+        tall = labels.length > 6;
         LinearLayout rows = new LinearLayout(ctx);
         rows.setOrientation(LinearLayout.VERTICAL);
         rows.setPadding(0, 0, 0, (int) (4 * d));
@@ -131,7 +131,8 @@ final class GlassDialog {
         ScrollView scroll = new ScrollView(ctx);
         scroll.setVerticalScrollBarEnabled(false);
         scroll.addView(rows);
-        panel.addView(scroll, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1));
+        panel.addView(scroll, tall ? new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1)
+                : new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         return this;
     }
 

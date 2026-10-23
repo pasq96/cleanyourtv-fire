@@ -154,15 +154,15 @@ public final class LauncherSettingsActivity extends Activity {
         LinearLayout buttons = findViewById(R.id.buttonsContainer);
         addToggle(buttons, "show_inputs_pill", R.string.opt_inputs, 0, config.showInputsPill);
         addToggle(buttons, "show_network_pill", R.string.opt_wifi, 0, config.showNetworkPill);
-        addToggle(buttons, Pills.SHOW_POWER_KEY, R.string.opt_power, 0, true);
+        addToggle(buttons, Pills.SHOW_POWER_KEY, R.string.opt_power, R.string.d_power, true);
         addPillStyles((LinearLayout) findViewById(R.id.pillsContainer), config);
         addSegmented(findViewById(R.id.segLift), R.string.dock_position, R.string.d_dock_height,
                 new int[]{R.string.dock_pos_0, R.string.dock_pos_1, R.string.dock_pos_2, R.string.dock_pos_3},
                 () -> Math.min(3, choices.getInt("dock_lift", 1)), i -> choices.edit().putInt("dock_lift", i).apply());
         addSegmented(findViewById(R.id.segBanner), R.string.lbl_banner, R.string.d_banner,
-                new int[]{R.string.banner_off, R.string.banner_stretch, R.string.banner_gradient},
+                new int[]{R.string.banner_off, R.string.banner_stretch, R.string.banner_gradient, R.string.banner_blur, R.string.banner_glass},
                 () -> Themes.bannerStyle(this), i -> choices.edit().putInt(Themes.BANNER_STYLE_KEY, i).apply());
-        addSegmented(findViewById(R.id.segAnimations), R.string.lbl_animations, 0, new int[]{R.string.on, R.string.off},
+        addSegmented(findViewById(R.id.segAnimations), R.string.lbl_animations, R.string.d_animations, new int[]{R.string.on, R.string.off},
                 () -> animations ? 0 : 1, i -> {
                     animations = i == 0;
                     if (!animations) advancedEffects = false;
@@ -178,14 +178,14 @@ public final class LauncherSettingsActivity extends Activity {
                                 R.string.enable, () -> setAdvanced(true));
                     }
                 });
-        addSegmented(findViewById(R.id.segSort), R.string.lbl_sort, 0, new int[]{R.string.sort_manual, R.string.sort_recent},
+        addSegmented(findViewById(R.id.segSort), R.string.lbl_sort, R.string.d_sort, new int[]{R.string.sort_manual, R.string.sort_recent},
                 () -> Themes.sortRecent(this) ? 1 : 0, i -> choices.edit().putBoolean(Themes.SORT_RECENT_KEY, i == 1).apply());
         addSegmented(findViewById(R.id.segUnits), R.string.lbl_units, 0, new int[]{R.string.weather_celsius, R.string.weather_fahrenheit},
                 () -> Weather.fahrenheit(choices) ? 1 : 0, i -> {
                     choices.edit().putString(Weather.KEY_UNITS, i == 1 ? "f" : "c").apply();
                     Weather.forget(this);
                 });
-        addSegmented(findViewById(R.id.segLanguage), R.string.lbl_lang, 0,
+        addSegmented(findViewById(R.id.segLanguage), R.string.lbl_lang, R.string.d_lang,
                 new int[]{R.string.lang_system, R.string.lang_en, R.string.lang_it},
                 () -> Arrays.asList(Lang.IDS).indexOf(Lang.chosen(this)), i -> {
                     if (Lang.IDS[i].equals(Lang.chosen(this))) return;
@@ -204,21 +204,7 @@ public final class LauncherSettingsActivity extends Activity {
             if (ok) { setResult(RESULT_OK); recreate(); }
         });
         themeChoice = findViewById(R.id.themeChoice);
-        themeChoice.setOnClickListener(v -> {
-            File pushedDir = Config.dir(this);
-            if (pushedDir != null && new File(pushedDir, Config.FILE_NAME).isFile()) {
-                Toast.makeText(this, R.string.theme_state_file, Toast.LENGTH_LONG).show();
-                return;
-            }
-            String next = Themes.next(Themes.chosen(choices, FireOs.is(this)));
-            // The new theme's layout applies: drop on-TV choices made over the old one.
-            choices.edit().putString(Themes.KEY, next).remove("columns").remove(Config.ROWS_BELOW_DOCK_KEY)
-                    .remove("animations").remove("advanced_effects").remove(Config.WALLPAPER_CHOICE_KEY)
-                    .remove(Config.DOCK_OPACITY_KEY).remove("show_all_apps").remove("long_press_move")
-                    .remove("always_show_names").remove("show_inputs_pill").remove("show_network_pill").remove("dock_lift").commit();
-            changed();
-            recreate();   // rows and toggles take the new theme's defaults
-        });
+        themeChoice.setOnClickListener(v -> pickTheme());
         followThemeChoice = findViewById(R.id.followThemeChoice);
         followThemeChoice.setOnClickListener(v -> {
             if (!hasOnTvChoices()) return;
@@ -257,6 +243,35 @@ public final class LauncherSettingsActivity extends Activity {
         LinearLayout row = (LinearLayout) views[0].getParent();
         row.removeAllViews();
         for (int i = views.length - 1; i >= 0; i--) row.addView(views[i]);
+    }
+
+    /** The themes as a list, like the other pickers; a theme pushed as a file keeps priority, as before. */
+    private void pickTheme() {
+        File pushedDir = Config.dir(this);
+        if (pushedDir != null && new File(pushedDir, Config.FILE_NAME).isFile()) {
+            Toast.makeText(this, R.string.theme_state_file, Toast.LENGTH_LONG).show();
+            return;
+        }
+        String current = Themes.chosen(choices, FireOs.is(this));
+        CharSequence[] labels = new CharSequence[Themes.IDS.length];
+        boolean[] on = new boolean[labels.length];
+        for (int i = 0; i < labels.length; i++) {
+            labels[i] = getString(Themes.label(Themes.IDS[i]));
+            on[i] = Themes.IDS[i].equals(current);
+        }
+        new GlassDialog(this, getString(R.string.theme_title)).width(620)
+                .list(labels, on, false, which -> {
+                    if (Themes.IDS[which].equals(current)) return;
+                    // The new theme's layout applies: drop on-TV choices made over the old one.
+                    choices.edit().putString(Themes.KEY, Themes.IDS[which]).remove("columns").remove(Config.ROWS_BELOW_DOCK_KEY)
+                            .remove("animations").remove("advanced_effects").remove(Config.WALLPAPER_CHOICE_KEY)
+                            .remove(Config.DOCK_OPACITY_KEY).remove("show_all_apps").remove("long_press_move")
+                            .remove("always_show_names").remove("show_inputs_pill").remove("show_network_pill").remove("dock_lift").commit();
+                    changed();
+                    recreate();   // rows and toggles take the new theme's defaults
+                })
+                .button(android.R.string.cancel, null)
+                .show();
     }
 
     private void showWallpaperPicker() {

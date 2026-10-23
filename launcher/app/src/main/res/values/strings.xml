@@ -271,4 +271,8 @@
     <string name="dock_pos_1">Low</string>
     <string name="dock_pos_2">Medium</string>
     <string name="dock_pos_3">High</string>
+    <string name="banner_blur">blurred</string>
+    <string name="banner_glass">glass</string>
+    <string name="theme_title">Theme</string>
+    <string name="d_power">Opens the system power menu.</string>
 </resources>

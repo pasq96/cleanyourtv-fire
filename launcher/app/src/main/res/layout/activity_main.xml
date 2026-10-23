@@ -255,15 +255,16 @@
                                 android:singleLine="true"
                                 android:ellipsize="end"
                                 android:textColor="#E6FFFFFF"
-                                android:textSize="17sp"
+                                android:textSize="15sp"
                                 android:fontFamily="@string/font_regular"
-                                android:letterSpacing="0.02"
+                                android:letterSpacing="0.14"
+                                android:textAllCaps="true"
                                 android:includeFontPadding="false" />
 
                             <ImageView
                                 android:id="@+id/weatherIcon"
-                                android:layout_width="26dp"
-                                android:layout_height="26dp"
+                                android:layout_width="22dp"
+                                android:layout_height="22dp"
                                 android:layout_marginStart="8dp"
                                 android:importantForAccessibility="no" />
                         </LinearLayout>

@@ -305,7 +305,7 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 String cacheKey = component.flattenToShortString() + '\n' + ri.activityInfo.applicationInfo.sourceDir + '\n' + style;
                 banner = iconBannerCache.get(cacheKey);
                 if (banner == null) {
-                    banner = IconBanner.make(ctx.getResources(), icon, style == Themes.BANNER_STRETCH);
+                    banner = IconBanner.make(ctx.getResources(), icon, style);
                     if (banner != null) iconBannerCache.put(cacheKey, banner);
                 }
             }
