@@ -239,7 +239,6 @@
     <string name="wifi_name_ok">shown</string>
     <string name="wifi_name_ask">needs permission</string>
     <string name="wifi_name_adb">No permission prompt on this TV. From a computer: adb shell pm grant com.gathin.tvhome android.permission.ACCESS_FINE_LOCATION</string>
-    <string name="wifi_name_loc">Turn on location in the TV settings too, or Android keeps the name hidden.</string>
     <string name="weather_units_state">Temperature: %1$s</string>
     <string name="weather_celsius">Celsius</string>
     <string name="weather_fahrenheit">Fahrenheit</string>
@@ -258,4 +257,8 @@
     <string name="power_restart">Restart</string>
     <string name="power_unavailable">This Fire TV does not let apps do that. Turn on the launcher accessibility service (Home key helper) and try again.</string>
     <string name="power_lock">Lock</string>
+    <string name="wifi_name_off">location is off</string>
+    <string name="wifi_name_hidden">hidden by the system</string>
+    <string name="wifi_name_cmd">Location is off. From a computer: adb shell pm grant com.gathin.tvhome android.permission.WRITE_SECURE_SETTINGS, then press this row again (or adb shell settings put secure location_mode 3).</string>
+    <string name="wifi_name_loc">Permission and location are on. If the name is still missing, reconnect to the network.</string>
 </resources>

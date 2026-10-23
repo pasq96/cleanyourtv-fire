@@ -187,7 +187,10 @@ public final class LauncherSettingsActivity extends Activity {
         wifiNameChoice = findViewById(R.id.wifiNameChoice);
         wifiNameChoice.setOnClickListener(v -> {
             if (locationGranted()) {
-                Toast.makeText(this, R.string.wifi_name_loc, Toast.LENGTH_LONG).show();
+                if (!WifiName.enableLocation(this)) Toast.makeText(this, R.string.wifi_name_cmd, Toast.LENGTH_LONG).show();
+                else Toast.makeText(this, R.string.wifi_name_loc, Toast.LENGTH_LONG).show();
+                changed();
+                refresh();
                 return;
             }
             try {
@@ -374,7 +377,8 @@ public final class LauncherSettingsActivity extends Activity {
         weatherUnitsChoice.setText(getString(R.string.weather_units_state,
                 getString(Weather.fahrenheit(choices) ? R.string.weather_fahrenheit : R.string.weather_celsius)));
         wifiNameChoice.setText(getString(R.string.wifi_name_state,
-                getString(locationGranted() ? R.string.wifi_name_ok : R.string.wifi_name_ask)));
+                getString(!locationGranted() ? R.string.wifi_name_ask : !WifiName.locationOn(this) ? R.string.wifi_name_off
+                        : WifiName.read(this) != null ? R.string.wifi_name_ok : R.string.wifi_name_hidden)));
         int style = Themes.bannerStyle(this);
         bannerChoice.setText(getString(R.string.banner_state, getString(style == Themes.BANNER_STRETCH
                 ? R.string.banner_stretch : style == Themes.BANNER_GRADIENT ? R.string.banner_gradient : R.string.banner_off)));

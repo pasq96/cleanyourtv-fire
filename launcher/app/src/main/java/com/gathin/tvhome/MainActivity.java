@@ -2443,12 +2443,12 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             } else if (wifi) {
                 WifiManager wm = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
                 WifiInfo info = wm != null ? wm.getConnectionInfo() : null;
-                String ssid = info != null ? info.getSSID() : null;
                 flame = info != null ? Math.max(1, Math.min(4, WifiManager.calculateSignalLevel(info.getRssi(), 5))) : 3;
-                if (ssid != null) {
-                    ssid = ssid.replace("\"", "").trim();
-                    if (!ssid.isEmpty() && !ssid.contains("unknown") && !ssid.equals("0x")) text = ssid;
+                String name = WifiName.read(this);
+                if (name == null && WifiName.permission(this) && !WifiName.locationOn(this) && WifiName.enableLocation(this)) {
+                    name = WifiName.read(this);   // location was off: this app turned it on
                 }
+                if (name != null) text = name;
             }
         } catch (Exception ignored) {
         }
