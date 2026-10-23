@@ -2232,11 +2232,11 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             else if (hour < 18) res = R.string.good_evening;
             else res = R.string.good_night;
         } else {
-            if (hour < 5) res = R.string.good_night;
-            else if (hour < 12) res = R.string.good_morning;
-            else if (hour < 17) res = R.string.good_afternoon;
-            else if (hour < 22) res = R.string.good_evening;
-            else res = R.string.good_night;
+            // Night 00-07, morning 07-13, afternoon 13-18, evening 18-24.
+            if (hour < 7) res = R.string.good_night;
+            else if (hour < 13) res = R.string.good_morning;
+            else if (hour < 18) res = R.string.good_afternoon;
+            else res = R.string.good_evening;
         }
         String festiveGreeting = festive ? festival.greetingText(getResources()) : "";
         if (!festiveGreeting.isEmpty()) {
