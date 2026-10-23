@@ -431,7 +431,7 @@ final class AppLibraryDialog {
             return;
         }
         selectedOffset = 0;
-        if (add && catalog != null) {
+        if (catalog != null) {
             RecyclerView.ViewHolder holder = catalog.findViewHolderForAdapterPosition(selectedPosition);
             if (holder != null) {
                 View card = holder.itemView;
@@ -442,10 +442,12 @@ final class AppLibraryDialog {
                         : catalog.getLayoutManager().getDecoratedLeft(card)
                             - params.leftMargin - catalog.getPaddingLeft();
             }
-            // Advance through missing shortcuts instead of following the newly checked app
-            // into the Home group. Preserve its screen slot when the catalogue is rebuilt.
-            int next = LibraryApps.nextFocus(selectedPosition, apps.size(),
-                    index -> !onHome.test(apps.get(index).activityInfo.packageName));
+            // Add: advance through missing shortcuts instead of following the newly checked app into the Home group.
+            // Remove: stay on its neighbour instead of following it to the missing group at the start.
+            // Either way the focused card keeps its screen slot when the catalogue is rebuilt.
+            int next = add ? LibraryApps.nextFocus(selectedPosition, apps.size(),
+                    index -> !onHome.test(apps.get(index).activityInfo.packageName))
+                    : LibraryApps.neighbour(selectedPosition, apps.size());
             if (next >= 0) {
                 selectedPackage = apps.get(next).activityInfo.packageName;
                 selectedPosition = next;

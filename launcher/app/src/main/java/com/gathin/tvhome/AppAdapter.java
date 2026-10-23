@@ -192,6 +192,9 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private final Set<String> hidden;
     /** show_all_apps: phone apps (LAUNCHER only) count as TV apps for visibility. */
     private final boolean showAllApps;
+    /** icon_banners: apps without a TV banner get one made from their icon (IconBanner), kept per installed build. */
+    private final boolean iconBanners;
+    private final Map<String, Drawable> iconBannerCache = new HashMap<>();
     /** Apps pre-seeded into the App library's "added" set (config.xml library_apps); empty by default. */
     private final Set<String> libraryPreload;
     private final boolean animations;
@@ -220,6 +223,7 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         this.fillDock = cfg.fillDock;
         this.hidden = new HashSet<>(cfg.hiddenApps);
         this.showAllApps = cfg.showAllApps;
+        this.iconBanners = cfg.iconBanners;
         this.libraryPreload = new HashSet<>(cfg.libraryApps);
         this.animations = cfg.animations;
         this.advancedEffects = cfg.animations && cfg.advancedEffects;
@@ -295,6 +299,15 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             // The icon is only drawn (and sampled for the glow) when there is no banner, so a tile with a
             // banner skips loading and decoding it.
             Drawable icon = banner == null ? ri.loadIcon(pm) : null;
+            if (banner == null && iconBanners && card == null) {
+                // sourceDir changes with every update, so a new icon makes a new banner.
+                String cacheKey = component.flattenToShortString() + '\n' + ri.activityInfo.applicationInfo.sourceDir;
+                banner = iconBannerCache.get(cacheKey);
+                if (banner == null) {
+                    banner = IconBanner.make(ctx.getResources(), icon);
+                    if (banner != null) iconBannerCache.put(cacheKey, banner);
+                }
+            }
             if (card != null) {
                 fresh.add(new Entry(Entry.CARD, label, component, banner, icon, card.caption, card.accent));
             } else {

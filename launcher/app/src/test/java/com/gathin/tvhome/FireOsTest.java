@@ -42,4 +42,11 @@ public class FireOsTest {
         FireOs.Guard g = new FireOs.Guard();
         for (long t = 0; t < 100_000; t += 3_000) assertTrue(g.allow(t));
     }
+
+    @Test
+    public void iconBannerBackgroundFromOpaqueEdges() {
+        int[] red = {0xFFFF0000, 0xFFFF0000, 0x00000000, 0xFFFF0000};
+        assertEquals(0xFFCC0000, IconBanner.average(red, red.length));      // darkened to 80 %
+        assertEquals(0xFF2A2D33, IconBanner.average(new int[8], 8));          // see-through icon
+    }
 }

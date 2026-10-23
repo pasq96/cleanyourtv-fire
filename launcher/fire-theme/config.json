@@ -1,7 +1,13 @@
 {
-  "dock_apps": ["com.stremio.one", "org.smarttube.stable", "se.hedekonsult.sparkle", "com.cbs.ott"],
+  "dock_apps": [
+    "com.stremio.one",
+    "org.smarttube.stable",
+    "se.hedekonsult.sparkle",
+    "com.cbs.ott"
+  ],
   "vpn_app": "com.adguard.vpn",
   "show_inputs_pill": false,
   "background_color": "#000000",
-  "wallpaper": false
+  "wallpaper": false,
+  "columns": 6
 }

@@ -212,6 +212,11 @@
     <!-- Hold OK on a tile picks it up to move it (as Move in the tile menu does); the remote's Menu key opens the tile
          menu. Needs tile_menu. On by default on Fire OS, whose remote has a Menu key; "long_press_move" in a theme. -->
     <bool name="long_press_move">false</bool>
+
+    <!-- Apps with no TV banner (phone apps, Amazon Photos) get a 16:9 banner made from their icon instead of a small
+         icon: an adaptive icon's background fills the tile, any other icon sits on its edge colour. On by default on
+         Fire OS; "icon_banners" in a theme's config.json. -->
+    <bool name="icon_banners">false</bool>
     <!-- A reorder button (two arrows) in the top bar. Off by default: reordering is also in the Settings
          button's long-press menu, so it needs no extra button on screen. -->
     <bool name="reorder_button">false</bool>

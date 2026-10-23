@@ -64,6 +64,10 @@ public class LibraryAppsTest {
 
     @Test public void addingTheLastMissingShortcutKeepsANearbyCardInsteadOfJumpingToTheStart() {
         assertEquals(3, LibraryApps.nextFocus(2, 5, index -> false));
+        // Removing a shortcut keeps focus on a neighbour, never back at the start.
+        assertEquals(3, LibraryApps.neighbour(2, 5));
+        assertEquals(3, LibraryApps.neighbour(4, 5));
+        assertEquals(-1, LibraryApps.neighbour(0, 1));
         assertEquals(3, LibraryApps.nextFocus(4, 5, index -> false));
         assertEquals(0, LibraryApps.nextFocus(0, 1, index -> { fail("No other card to inspect"); return true; }));
         assertEquals(-1, LibraryApps.nextFocus(0, 0, index -> { fail("Empty catalogue"); return true; }));

@@ -125,6 +125,12 @@ final class LibraryApps {
         return current + 1 < count ? current + 1 : Math.max(0, current - 1);
     }
 
+    /** The card next to {@code current} (the following one, or the previous one at the end); -1 if none is left. */
+    static int neighbour(int current, int count) {
+        if (count <= 1 || current < 0 || current >= count) return -1;
+        return current + 1 < count ? current + 1 : current - 1;
+    }
+
     static Set<String> change(Set<String> saved, String pkg, boolean added) {
         if (!validPackage(pkg)) throw new IllegalArgumentException("Invalid package");
         Set<String> next = new HashSet<>(saved);
