@@ -1395,6 +1395,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         int n = adapter.movableCount();
         if (from < 0 || from >= n) {
             drop();
+            if (singleMove) endReorder();
             return;
         }
         int to;
@@ -2126,8 +2127,9 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
 
     /** The first top-bar button after Inputs that is shown: the network pill, Reorder, then Settings (always there). */
     private View firstTopButton() {
-        if (btnWifi.getVisibility() == View.VISIBLE) return btnWifi;
-        if (btnReorder.getVisibility() == View.VISIBLE) return btnReorder;
+        for (View b : new View[]{btnWifi, btnVpn, btnReorder, btnLibraryTop, btnLauncher}) {
+            if (b.getVisibility() == View.VISIBLE) return b;
+        }
         return findViewById(R.id.btnSettings);
     }
 
@@ -2390,10 +2392,11 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         } catch (Exception ignored) {
         }
         // The VPN has its own pill: green "VPN on", or red "VPN off" when an app is set but the tunnel is down.
-        boolean vpnDown = !vpn && online && !vpnApp.isEmpty();
+        boolean vpnDown = !vpn && online && vpnAppInstalled();
         if (!TextUtils.equals(btnWifi.getText(), text)) btnWifi.setText(text);
         if (btnVpn != null) {
             boolean show = (vpn || vpnDown) && showNetworkPill && !topMenu;
+            if (!show && btnVpn.hasFocus()) btnWifi.requestFocus();
             btnVpn.setVisibility(show ? View.VISIBLE : View.GONE);
             if (show) {
                 btnVpn.setText(vpn ? R.string.vpn_pill_on : R.string.vpn_pill_off);
@@ -2520,6 +2523,15 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             dropIn(popup, panel, btnVpn, Gravity.START);
             rows.getChildAt(0).requestFocus();
         }
+    }
+
+    /** At least one chosen VPN app is installed: only then can "VPN off" be acted on. */
+    private boolean vpnAppInstalled() {
+        for (String pkg : vpnApp.split(",")) {
+            pkg = pkg.trim();
+            if (!pkg.isEmpty() && launchIntent(getPackageManager(), pkg) != null) return true;
+        }
+        return false;
     }
 
     private static Intent launchIntent(PackageManager pm, String pkg) {
@@ -2970,7 +2982,8 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         if (at < 0) return;
         focusTile(at);
         pickUp(at);
-        singleMove = true;
+        singleMove = movingKey != null;
+        if (!singleMove) endReorder();
     }
 
     /**

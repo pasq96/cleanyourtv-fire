@@ -137,7 +137,13 @@ public final class LauncherSettingsActivity extends Activity {
                 .setMessage(R.string.reset_defaults_hint)
                 .setPositiveButton(R.string.reset_defaults, (d, w) -> {
                     // Back to the built-in setup: no VPN app, theme and layout choices cleared (hidden apps stay as they are).
-                    choices.edit().clear().putString(Config.VPN_APP_KEY, "").commit();
+                    // Keep the change counter and theme stamp: Home must still see a change, and the stamp must not look new.
+                    long revision = choices.getLong(Config.SETTINGS_REVISION_KEY, 0);
+                    String stamp = choices.getString(Config.THEME_SIGNATURE_KEY, null);
+                    SharedPreferences.Editor wipe = choices.edit().clear().putString(Config.VPN_APP_KEY, "")
+                            .putLong(Config.SETTINGS_REVISION_KEY, revision);
+                    if (stamp != null) wipe.putString(Config.THEME_SIGNATURE_KEY, stamp);
+                    wipe.commit();
                     changed();
                     recreate();
                 })
@@ -172,34 +178,29 @@ public final class LauncherSettingsActivity extends Activity {
         });
         themeChoice = findViewById(R.id.themeChoice);
         themeChoice.setOnClickListener(v -> {
+            File pushedDir = Config.dir(this);
+            if (pushedDir != null && new File(pushedDir, Config.FILE_NAME).isFile()) {
+                Toast.makeText(this, R.string.theme_state_file, Toast.LENGTH_LONG).show();
+                return;
+            }
             String next = Themes.next(Themes.chosen(choices, FireOs.is(this)));
             // The new theme's layout applies: drop on-TV choices made over the old one.
             choices.edit().putString(Themes.KEY, next).remove("columns").remove(Config.ROWS_BELOW_DOCK_KEY)
                     .remove("animations").remove("advanced_effects").remove(Config.WALLPAPER_CHOICE_KEY)
-                    .remove(Config.DOCK_OPACITY_KEY).commit();
-            Config current = Config.load(this);
-            columns = current.columns;
-            rowsBelowDock = current.rowsBelowDock;
-            dockOpacity = current.dockOpacity;
-            animations = current.animations;
-            advancedEffects = current.animations && current.advancedEffects;
+                    .remove(Config.DOCK_OPACITY_KEY).remove("show_all_apps").remove("long_press_move")
+                    .remove("always_show_names").remove("show_inputs_pill").remove("show_network_pill").commit();
             changed();
-            refresh();
+            recreate();   // rows and toggles take the new theme's defaults
         });
         followThemeChoice = findViewById(R.id.followThemeChoice);
         followThemeChoice.setOnClickListener(v -> {
             if (!hasOnTvChoices()) return;
             choices.edit().remove(Config.VPN_APP_KEY).remove("columns").remove(Config.ROWS_BELOW_DOCK_KEY).remove("animations")
                     .remove("advanced_effects").remove(Config.WALLPAPER_CHOICE_KEY)
-                    .remove(Config.DOCK_OPACITY_KEY).commit();
-            Config current = Config.load(this);
-            columns = current.columns;
-            rowsBelowDock = current.rowsBelowDock;
-            dockOpacity = current.dockOpacity;
-            animations = current.animations;
-            advancedEffects = current.animations && current.advancedEffects;
+                    .remove(Config.DOCK_OPACITY_KEY).remove("show_all_apps").remove("long_press_move")
+                    .remove("always_show_names").remove("show_inputs_pill").remove("show_network_pill").commit();
             changed();
-            refresh();
+            recreate();
         });
         findViewById(R.id.defaultHomeChoice).setOnClickListener(v -> {
             Toast.makeText(this, R.string.home_settings_help, Toast.LENGTH_LONG).show();
@@ -415,7 +416,9 @@ public final class LauncherSettingsActivity extends Activity {
                     boolean any = false;
                     for (int i = 0; i < on.length; i++) {
                         if (on[i] == was[i]) continue;
-                        any |= LibraryApps.save(this, apps.get(i)[0], !on[i]);
+                        boolean saved = LibraryApps.save(this, apps.get(i)[0], !on[i]);
+                        if (!saved) Toast.makeText(this, R.string.library_save_failed, Toast.LENGTH_LONG).show();
+                        any |= saved;
                     }
                     if (any) changed();
                 })
