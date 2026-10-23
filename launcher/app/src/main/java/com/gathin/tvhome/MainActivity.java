@@ -2973,36 +2973,20 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
 
     // ---- launcher settings and module cards -------------------------------------------------------
 
-    /** Power pill: off or restart, each asking for a confirmation in a second glass panel. */
+    /** Power pill: lock, power off or restart, straight away. The choice is tapped in the system power menu for you. */
     private void showPowerMenu(View anchor) {
         View panel = getLayoutInflater().inflate(R.layout.popup_inputs, root, false);
         LinearLayout rows = panel.findViewById(R.id.rows);
         PopupWindow popup = glassPopup(panel, (int) (240 * density));
-        addInputRow(rows, popup, R.drawable.ic_power, getString(R.string.power_off), -1, () -> root.post(() -> confirmPower(anchor, false)));
-        addInputRow(rows, popup, R.drawable.ic_restart, getString(R.string.power_restart), -1, () -> root.post(() -> confirmPower(anchor, true)));
+        addInputRow(rows, popup, R.drawable.ic_lock, getString(R.string.power_lock), -1, () -> power(HomeKeyService.POWER_LOCK));
+        addInputRow(rows, popup, R.drawable.ic_power, getString(R.string.power_off), -1, () -> power(HomeKeyService.POWER_OFF));
+        addInputRow(rows, popup, R.drawable.ic_restart, getString(R.string.power_restart), -1, () -> power(HomeKeyService.POWER_RESTART));
         dropIn(popup, panel, anchor, getResources().getBoolean(R.bool.rtl_menu_bar) ? Gravity.START : Gravity.END);
-        rows.getChildAt(0).requestFocus();
+        rows.getChildAt(1).requestFocus();
     }
 
-    private void confirmPower(View anchor, boolean restart) {
-        View panel = getLayoutInflater().inflate(R.layout.popup_inputs, root, false);
-        LinearLayout rows = panel.findViewById(R.id.rows);
-        PopupWindow popup = glassPopup(panel, (int) (280 * density));
-        TextView ask = new TextView(this);
-        ask.setText(restart ? R.string.power_ask_restart : R.string.power_ask_off);
-        ask.setTextColor(0xFFFFFFFF);
-        ask.setTextSize(16);
-        int pad = (int) (14 * density);
-        ask.setPadding(pad, pad, pad, (int) (8 * density));
-        rows.addView(ask);
-        addInputRow(rows, popup, restart ? R.drawable.ic_restart : R.drawable.ic_power, getString(R.string.power_confirm), -1, () -> {
-            boolean done = restart ? PowerActions.restart(this) : PowerActions.off(this);
-            Toast.makeText(this, done ? (restart ? R.string.power_restarting : R.string.power_going_off)
-                    : R.string.power_unavailable, Toast.LENGTH_LONG).show();
-        });
-        addInputRow(rows, popup, R.drawable.ic_close, getString(android.R.string.cancel), -1, () -> { });
-        dropIn(popup, panel, anchor, getResources().getBoolean(R.bool.rtl_menu_bar) ? Gravity.START : Gravity.END);
-        rows.getChildAt(rows.getChildCount() - 1).requestFocus();
+    private void power(int which) {
+        if (!PowerActions.run(which)) Toast.makeText(this, R.string.power_unavailable, Toast.LENGTH_LONG).show();
     }
 
     /** top_menu: the gear's dropdown, standing in for the Inputs, Wi-Fi and Settings pills. */

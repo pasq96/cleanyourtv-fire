@@ -210,10 +210,6 @@
     <string name="opt_power">Pillola alimentazione</string>
     <string name="power_off">Spegni</string>
     <string name="power_restart">Riavvia</string>
-    <string name="power_ask_off">Spegnere la Fire TV?</string>
-    <string name="power_ask_restart">Riavviare la Fire TV?</string>
-    <string name="power_confirm">Conferma</string>
-    <string name="power_going_off">Vado in standby</string>
-    <string name="power_restarting">Riavvio in corso</string>
-    <string name="power_unavailable">Questa Fire TV non permette alle app di farlo. Attiva il servizio di accessibilità del launcher oppure usa il telecomando.</string>
+    <string name="power_unavailable">Questa Fire TV non permette alle app di farlo. Attiva il servizio di accessibilità del launcher (tasto Home) e riprova.</string>
+    <string name="power_lock">Blocco</string>
 </resources>
