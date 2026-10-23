@@ -3015,7 +3015,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
                 reloadApps(false);
                 // Focus stays in place, on the app that took the hidden one's slot (the closed menu would send it to the start).
                 if (at >= 0 && adapter.appCount() > 0) refocusAfterLayout(Math.min(at, adapter.appCount() - 1));
-                Toast.makeText(this, R.string.tile_hidden, Toast.LENGTH_LONG).show();
+                Toast.makeText(this, R.string.tile_hidden, Toast.LENGTH_SHORT).show();
             } else Toast.makeText(this, R.string.library_save_failed, Toast.LENGTH_LONG).show();
         });
         addSettingsMenuRow(rows, popup, R.string.tile_force_stop, () -> AppActions.stop(this, pkg));

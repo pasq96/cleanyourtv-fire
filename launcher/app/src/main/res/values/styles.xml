@@ -47,6 +47,15 @@
         <item name="android:focusable">true</item>
         <item name="android:clickable">true</item>
     </style>
+    <!-- Short explanation beside a settings row: right side of the line, dimmer than the row's title. -->
+    <style name="SettingsDesc">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_weight">4</item>
+        <item name="android:paddingStart">24dp</item>
+        <item name="android:textColor">#FFACB8C1</item>
+        <item name="android:textSize">14sp</item>
+    </style>
     <style name="SettingsColumnChoice" parent="SettingsRow">
         <item name="android:layout_width">0dp</item>
         <item name="android:layout_weight">1</item>

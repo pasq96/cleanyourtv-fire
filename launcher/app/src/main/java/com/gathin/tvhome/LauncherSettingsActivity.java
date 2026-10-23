@@ -51,7 +51,7 @@ public final class LauncherSettingsActivity extends Activity {
         choices = getSharedPreferences(Config.SETTINGS_NAME, MODE_PRIVATE);
         Config config = Config.load(this);
         View reorderChoice = findViewById(R.id.reorderChoice);
-        reorderChoice.setVisibility(config.launcherSettingsButton ? View.VISIBLE : View.GONE);
+        ((View) reorderChoice.getParent()).setVisibility(config.launcherSettingsButton ? View.VISIBLE : View.GONE);
         reorderChoice.setOnClickListener(v -> {
             setResult(RESULT_OK, new Intent().putExtra(EXTRA_REORDER, true));
             finish();
@@ -155,11 +155,12 @@ public final class LauncherSettingsActivity extends Activity {
             refresh();
         });
         LinearLayout toggles = findViewById(R.id.togglesContainer);
-        addToggle(toggles, "show_all_apps", R.string.opt_show_all_apps, config.showAllApps);
-        addToggle(toggles, "long_press_move", R.string.opt_long_press_move, config.longPressMove);
-        addToggle(toggles, "always_show_names", R.string.opt_names, config.alwaysShowNames);
-        addToggle(toggles, "show_inputs_pill", R.string.opt_inputs, config.showInputsPill);
-        addToggle(toggles, "show_network_pill", R.string.opt_wifi, config.showNetworkPill);
+        addToggle(toggles, "show_all_apps", R.string.opt_show_all_apps, R.string.d_show_all, config.showAllApps);
+        addToggle(toggles, "long_press_move", R.string.opt_long_press_move, R.string.d_long_press, config.longPressMove);
+        addToggle(toggles, "always_show_names", R.string.opt_names, R.string.d_names, config.alwaysShowNames);
+        LinearLayout buttons = findViewById(R.id.buttonsContainer);
+        addToggle(buttons, "show_inputs_pill", R.string.opt_inputs, R.string.d_inputs, config.showInputsPill);
+        addToggle(buttons, "show_network_pill", R.string.opt_wifi, R.string.d_wifi, config.showNetworkPill);
         sortChoice = findViewById(R.id.sortChoice);
         sortChoice.setOnClickListener(v -> {
             choices.edit().putBoolean(Themes.SORT_RECENT_KEY, !Themes.sortRecent(this)).apply();
@@ -328,19 +329,29 @@ public final class LauncherSettingsActivity extends Activity {
     }
 
     /** An on/off row saved as a boolean choice that Config reads under the same key. */
-    private void addToggle(LinearLayout parent, String key, int label, boolean theme) {
+    private void addToggle(LinearLayout parent, String key, int label, int desc, boolean theme) {
+        float d = getResources().getDisplayMetrics().density;
+        LinearLayout line = new LinearLayout(this);
+        line.setOrientation(LinearLayout.HORIZONTAL);
+        line.setGravity(android.view.Gravity.CENTER_VERTICAL);
+        LinearLayout.LayoutParams lineLp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        lineLp.topMargin = (int) (10 * d);
         TextView row = new TextView(this);
-        row.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-        ((LinearLayout.LayoutParams) row.getLayoutParams()).topMargin = (int) (10 * getResources().getDisplayMetrics().density);
         row.setFocusable(true);
         row.setClickable(true);
         row.setBackgroundResource(R.drawable.settings_choice_bg);
         row.setTextColor(0xFFFFFFFF);
         row.setTextSize(18);
         row.setGravity(android.view.Gravity.CENTER_VERTICAL);
-        int pad = (int) (18 * getResources().getDisplayMetrics().density);
-        row.setPadding(pad, 0, pad, 0);
-        row.setMinHeight((int) (52 * getResources().getDisplayMetrics().density));
+        row.setPadding((int) (18 * d), 0, (int) (18 * d), 0);
+        row.setMinHeight((int) (52 * d));
+        line.addView(row, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 5));
+        TextView hint = new TextView(this);
+        hint.setText(desc);
+        hint.setTextColor(0xFFACB8C1);
+        hint.setTextSize(14);
+        hint.setPadding((int) (24 * d), 0, 0, 0);
+        line.addView(hint, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 4));
         Runnable show = () -> row.setText(getString(R.string.opt_state, getString(label),
                 getString(choices.getBoolean(key, theme) ? R.string.on : R.string.off)));
         row.setOnClickListener(v -> {
@@ -349,7 +360,7 @@ public final class LauncherSettingsActivity extends Activity {
             show.run();
         });
         toggleRefreshers.add(show);
-        parent.addView(row);
+        parent.addView(line, lineLp);
         show.run();
     }
 
