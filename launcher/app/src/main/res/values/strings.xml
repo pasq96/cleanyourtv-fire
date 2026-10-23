@@ -44,7 +44,7 @@
     <string name="vpn">VPN</string>
     <string name="vpn_off">VPN off</string>
     <string name="home_settings">Default home (Android TV only)</string>
-    <string name="home_settings_help">Select your original home to stop using CleanYourTV as Home, or CleanYourTV to switch back. The original launcher must be enabled and your TV must provide a home picker; use the restore script first if it was disabled.</string>
+    <string name="home_settings_help">Pick your original home to stop using CleanYourTV, or CleanYourTV to switch back. The original launcher must be enabled; if disabled, run the restore script first.</string>
     <string name="launcher_settings">Launcher settings</string>
     <string name="columns_label">Apps per row</string>
     <string name="rows_below_dock_label">Rows below dock</string>
@@ -82,7 +82,7 @@
     <string name="card_show">Show card</string>
     <string name="card_not_saved">Not saved</string>
     <string name="module_cards">Module cards</string>
-    <string name="no_module_cards">No module cards installed</string>
+    <string name="no_module_cards">No module cards</string>
     <string name="card_app_name">App: %1$s</string>
     <string name="card_state_shown">Shown</string>
     <string name="card_state_over_limit">Shown, over the limit of 8</string>
@@ -92,10 +92,10 @@
     <string name="card_state_new_label">New name</string>
     <string name="dock_edit">Edit dock</string>
     <string name="dock_edit_hint">Pick a dock slot\nOK to choose, Back to finish</string>
-    <string name="dock_edit_pick_app">Pick the app for this slot\nOK to choose, Back to change slot</string>
+    <string name="dock_edit_pick_app">Pick an app\nOK confirms, Back changes slot</string>
     <string name="tile_add_to_dock">Add to dock</string>
     <string name="tile_replace_in_dock">Replace with another app</string>
-    <string name="dock_edit_pick_place">Pick a slot in the dock\nBack to cancel</string>
+    <string name="dock_edit_pick_place">Pick a dock slot\nBack cancels</string>
     <string name="reorder">Reorder apps</string>
     <string name="tile_move">Move</string>
     <string name="tile_open">Open</string>
@@ -153,7 +153,7 @@
          last opened, e.g. "5 minutes ago" or "yesterday, 9:40 pm". -->
     <string name="last_opened">Last opened %1$s</string>
     <string name="theme_state">Theme: %1$s</string>
-    <string name="theme_state_file">Theme from a pushed config.json (remove it to pick one here)</string>
+    <string name="theme_state_file">Theme set by a pushed config.json (delete it to choose here)</string>
     <string name="theme_fire">Fire (dock Stremio, SmartTube, Sparkle)</string>
     <string name="theme_clean">Clean (black, 6 columns)</string>
     <string name="theme_stock">Stock (built-in)</string>
@@ -249,7 +249,7 @@
     <string name="opt_power">Power pill</string>
     <string name="power_off">Turn off</string>
     <string name="power_restart">Restart</string>
-    <string name="power_unavailable">This Fire TV does not let apps do that. Turn on the launcher accessibility service (Home key helper) and try again.</string>
+    <string name="power_unavailable">Not supported here. Turn on the launcher\'s accessibility service and retry.</string>
     <string name="power_lock">Lock</string>
     <string name="lbl_banner">Banner style</string>
     <string name="lbl_animations">Animations</string>
@@ -271,15 +271,15 @@
     <string name="wifi_hidden">hidden</string>
     <string name="wifi_shown">shown</string>
     <string name="d_inputs">Only appears when the TV has sources to switch to (HDMI, antenna, Live TV). Without any, such as on a Fire TV Stick, it stays hidden.</string>
-    <string name="home_fire_note">Not available on Fire OS: Amazon keeps the Home key. CleanYourTV takes it over through its accessibility service instead.</string>
+    <string name="home_fire_note">Not on Fire OS: Amazon keeps Home. CleanYourTV intercepts it via its accessibility service.</string>
     <string name="lbl_daily">Daily wallpaper</string>
     <string name="d_daily">A new picture each day, downloaded once when Home opens. Picsum: a photo that changes with the date. Bing: the Bing picture of the day.</string>
     <string name="daily_off">off</string>
     <string name="daily_picsum">Picsum</string>
     <string name="daily_bing">Bing</string>
     <string name="daily_ok">Daily wallpaper updated</string>
-    <string name="daily_failed">Daily wallpaper not downloaded: %1$s</string>
-    <string name="wifi_problem_perm">The Wi-Fi name needs the location permission, which this TV did not grant.</string>
-    <string name="wifi_problem_loc">Location is off and this app cannot turn it on.</string>
-    <string name="wifi_problem_hidden">Android is hiding the network name. Reconnect to the network and try again.</string>
+    <string name="daily_failed">Daily wallpaper failed: %1$s</string>
+    <string name="wifi_problem_perm">Wi-Fi name needs the location permission, not granted.</string>
+    <string name="wifi_problem_loc">Location is off and the app can\'t turn it on.</string>
+    <string name="wifi_problem_hidden">Android hides the network name. Reconnect and retry.</string>
 </resources>

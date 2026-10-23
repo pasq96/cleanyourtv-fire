@@ -21,7 +21,7 @@
     <string name="dream_name">Orologio</string>
     <string name="vpn_off">VPN disattivata</string>
     <string name="home_settings">Home predefinita (solo Android TV)</string>
-    <string name="home_settings_help">Seleziona la home originale per smettere di usare CleanYourTV come Home, oppure CleanYourTV per tornare indietro. Il launcher originale deve essere attivo e la TV deve offrire la scelta della home; se era disattivato, usa prima lo script di ripristino.</string>
+    <string name="home_settings_help">Scegli la home originale per smettere di usare CleanYourTV, o CleanYourTV per tornare. Il launcher originale deve essere attivo; se disattivato, usa prima lo script di ripristino.</string>
     <string name="launcher_settings">Impostazioni del launcher</string>
     <string name="columns_label">App per riga</string>
     <string name="dock_opacity_label">Opacità della barra del dock</string>
@@ -59,7 +59,7 @@
     <string name="card_show">Mostra scheda</string>
     <string name="card_not_saved">Non salvato</string>
     <string name="module_cards">Schede modulo</string>
-    <string name="no_module_cards">Nessuna scheda modulo installata</string>
+    <string name="no_module_cards">Nessuna scheda modulo</string>
     <string name="card_app_name">App: %1$s</string>
     <string name="card_state_shown">Visibile</string>
     <string name="card_state_over_limit">Visibile, oltre il limite di 8</string>
@@ -69,7 +69,7 @@
     <string name="card_state_new_label">Nuovo nome</string>
     <string name="dock_edit">Modifica dock</string>
     <string name="dock_edit_hint">Scegli un posto nel dock\nOK conferma, Indietro termina</string>
-    <string name="dock_edit_pick_app">Scegli l\'app per questo posto\nOK conferma, Indietro cambia posto</string>
+    <string name="dock_edit_pick_app">Scegli un\'app\nOK conferma, Indietro cambia posto</string>
     <string name="tile_add_to_dock">Aggiungi al dock</string>
     <string name="tile_replace_in_dock">Sostituisci con un\'altra app</string>
     <string name="dock_edit_pick_place">Scegli un posto nel dock\nIndietro annulla</string>
@@ -107,7 +107,7 @@
     <string name="race_finished">Bandiera a scacchi</string>
     <string name="last_opened">Ultima apertura: %1$s</string>
     <string name="theme_state">Tema: %1$s</string>
-    <string name="theme_state_file">Tema da un config.json caricato (eliminalo per sceglierne uno qui)</string>
+    <string name="theme_state_file">Tema da config.json caricato (eliminalo per sceglierlo qui)</string>
     <string name="theme_fire">Fire (dock Stremio, SmartTube, Sparkle)</string>
     <string name="theme_clean">Pulito (nero, 6 colonne)</string>
     <string name="theme_stock">Predefinito</string>
@@ -203,7 +203,7 @@
     <string name="opt_power">Pillola alimentazione</string>
     <string name="power_off">Spegni</string>
     <string name="power_restart">Riavvia</string>
-    <string name="power_unavailable">Questa Fire TV non permette alle app di farlo. Attiva il servizio di accessibilità del launcher (tasto Home) e riprova.</string>
+    <string name="power_unavailable">Non supportato qui. Attiva il servizio di accessibilità del launcher e riprova.</string>
     <string name="power_lock">Blocco</string>
     <string name="lbl_banner">Stile banner</string>
     <string name="lbl_animations">Animazioni</string>
@@ -225,15 +225,15 @@
     <string name="wifi_hidden">nascosto</string>
     <string name="wifi_shown">mostrato</string>
     <string name="d_inputs">Compare solo se la TV ha sorgenti a cui passare (HDMI, antenna, Live TV). Senza, come su una Fire TV Stick, resta nascosto.</string>
-    <string name="home_fire_note">Non disponibile su Fire OS: Amazon tiene il tasto Home. CleanYourTV lo intercetta tramite il suo servizio di accessibilità.</string>
+    <string name="home_fire_note">Non su Fire OS: Amazon tiene Home. CleanYourTV lo intercetta col servizio di accessibilità.</string>
     <string name="lbl_daily">Sfondo del giorno</string>
     <string name="d_daily">Una nuova immagine ogni giorno, scaricata una volta all\'apertura della Home. Picsum: una foto che cambia con la data. Bing: l\'immagine del giorno di Bing.</string>
     <string name="daily_off">spento</string>
     <string name="daily_picsum">Picsum</string>
     <string name="daily_bing">Bing</string>
     <string name="daily_ok">Sfondo del giorno aggiornato</string>
-    <string name="daily_failed">Sfondo del giorno non scaricato: %1$s</string>
-    <string name="wifi_problem_perm">Il nome del Wi-Fi richiede il permesso di posizione, che questa TV non ha concesso.</string>
-    <string name="wifi_problem_loc">La posizione è spenta e questa app non può accenderla.</string>
-    <string name="wifi_problem_hidden">Android nasconde il nome della rete. Riconnettiti alla rete e riprova.</string>
+    <string name="daily_failed">Sfondo del giorno non riuscito: %1$s</string>
+    <string name="wifi_problem_perm">Il nome Wi-Fi richiede il permesso di posizione, non concesso.</string>
+    <string name="wifi_problem_loc">Posizione spenta e l\'app non può attivarla.</string>
+    <string name="wifi_problem_hidden">Android nasconde il nome della rete. Riconnettiti e riprova.</string>
 </resources>
