@@ -14,7 +14,7 @@ import java.nio.charset.StandardCharsets;
 
 /** Current conditions from OpenWeatherMap, with the API key and place set in Launcher settings. Cached, refreshed every 30 min. */
 final class Weather {
-    static final String KEY_API = "weather_key", KEY_CITY = "weather_city";
+    static final String KEY_API = "weather_key", KEY_CITY = "weather_city", KEY_UNITS = "weather_units";
     private static final String CACHE = "weather_cache";
     private static final long MAX_AGE_MS = 30L * 60 * 1000;
 
@@ -37,6 +37,11 @@ final class Weather {
     interface Listener { void onWeather(Now now); }
 
     private Weather() {}
+
+    /** Fahrenheit when the choice says so; Celsius otherwise. */
+    static boolean fahrenheit(SharedPreferences p) {
+        return "f".equals(p.getString(KEY_UNITS, "c"));
+    }
 
     static boolean configured(Context ctx) {
         SharedPreferences p = prefs(ctx);
@@ -71,7 +76,7 @@ final class Weather {
             HttpURLConnection conn = null;
             try {
                 URL url = new URL("https://api.openweathermap.org/data/2.5/weather?q=" + URLEncoder.encode(place, "UTF-8")
-                        + "&units=metric&lang=" + URLEncoder.encode(lang, "UTF-8") + "&appid=" + URLEncoder.encode(key, "UTF-8"));
+                        + "&units=" + (fahrenheit(p) ? "imperial" : "metric") + "&lang=" + URLEncoder.encode(lang, "UTF-8") + "&appid=" + URLEncoder.encode(key, "UTF-8"));
                 conn = (HttpURLConnection) url.openConnection();
                 conn.setConnectTimeout(8000);
                 conn.setReadTimeout(8000);

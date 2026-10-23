@@ -172,7 +172,7 @@
     <string name="opt_inputs">Pulsante Ingressi</string>
     <string name="d_reorder">Sposta le app nella griglia.</string>
     <string name="dock_height">Altezza del dock</string>
-    <string name="d_dock_height">Alza il dock, riducendo lo spazio sotto i pulsanti in alto.</string>
+    <string name="d_dock_height">Riduce lo spazio sotto i pulsanti in alto.</string>
     <string name="lang_state">Lingua: %1$s</string>
     <string name="lang_system">Sistema</string>
     <string name="lang_en">English</string>
@@ -187,4 +187,14 @@
     <string name="weather_city">Località (es. Napoli,IT)</string>
     <string name="d_weather_key">Chiave gratuita da openweathermap.org. Mostra il meteo accanto all\'orologio.</string>
     <string name="d_weather_city">Città, con il codice paese se serve.</string>
+    <string name="sec_grid">Griglia</string>
+    <string name="d_wifi_name">Android mostra il nome della rete solo con il permesso di posizione.</string>
+    <string name="wifi_name_state">Nome della rete sul pulsante Wi-Fi: %1$s</string>
+    <string name="wifi_name_ok">mostrato</string>
+    <string name="wifi_name_ask">serve il permesso</string>
+    <string name="wifi_name_adb">Nessuna richiesta di permesso su questa TV. Da computer: adb shell pm grant com.gathin.tvhome android.permission.ACCESS_FINE_LOCATION</string>
+    <string name="wifi_name_loc">Attiva anche la posizione nelle impostazioni della TV, altrimenti Android nasconde il nome.</string>
+    <string name="weather_units_state">Temperatura: %1$s</string>
+    <string name="weather_celsius">Celsius</string>
+    <string name="weather_fahrenheit">Fahrenheit</string>
 </resources>

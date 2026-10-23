@@ -218,7 +218,7 @@
     <string name="opt_inputs">Inputs button</string>
     <string name="d_reorder">Move apps around the grid.</string>
     <string name="dock_height">Dock height</string>
-    <string name="d_dock_height">Raises the dock, closing the gap under the top buttons.</string>
+    <string name="d_dock_height">Reduces the gap under the top buttons.</string>
     <string name="lang_state">Language: %1$s</string>
     <string name="lang_system">System</string>
     <string name="lang_en">English</string>
@@ -233,4 +233,14 @@
     <string name="weather_city">Place (e.g. Napoli,IT)</string>
     <string name="d_weather_key">Free key from openweathermap.org. Shows the weather beside the clock.</string>
     <string name="d_weather_city">City, optionally with country code.</string>
+    <string name="sec_grid">Grid</string>
+    <string name="d_wifi_name">Android shows the network name only with the location permission.</string>
+    <string name="wifi_name_state">Network name on the Wi-Fi button: %1$s</string>
+    <string name="wifi_name_ok">shown</string>
+    <string name="wifi_name_ask">needs permission</string>
+    <string name="wifi_name_adb">No permission prompt on this TV. From a computer: adb shell pm grant com.gathin.tvhome android.permission.ACCESS_FINE_LOCATION</string>
+    <string name="wifi_name_loc">Turn on location in the TV settings too, or Android keeps the name hidden.</string>
+    <string name="weather_units_state">Temperature: %1$s</string>
+    <string name="weather_celsius">Celsius</string>
+    <string name="weather_fahrenheit">Fahrenheit</string>
 </resources>
