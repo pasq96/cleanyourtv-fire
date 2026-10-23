@@ -11,6 +11,7 @@ permissions:
 jobs:
   lists-and-tools:
     name: Lists, tools and docs
+    if: github.repository_owner == 'Gathin23'   # upstream only; the fork builds with fire-apk.yml
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -28,6 +29,7 @@ jobs:
 
   launcher:
     name: Launcher build and unit tests
+    if: github.repository_owner == 'Gathin23'   # upstream only; the fork builds with fire-apk.yml
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

@@ -15,6 +15,7 @@ permissions:
 jobs:
   build:
     name: Build changed add-ons
+    if: github.repository_owner == 'Gathin23'   # upstream only; the fork builds with fire-apk.yml
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

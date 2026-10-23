@@ -6,10 +6,11 @@ window with this launcher and leaves Settings alone. Nothing is disabled or unin
 
 ## Builds
 
-`.github/workflows/fire-apk.yml`: every push to `main` builds `cleanyourtv-fire.apk` (Actions artifact);
-a `v*` tag also publishes it as a release.
+`.github/workflows/fire-apk.yml`: every push to `main` builds `cleanyourtv-fire.apk` and puts it on the
+rolling `latest` release: `releases/download/latest/cleanyourtv-fire.apk`. A `v*` tag gets its own release.
+Gradle dependencies and task outputs are cached between runs; upstream's workflows are skipped on the fork.
 
-Signing secrets (Settings → Secrets and variables → Actions), so every build installs over the previous one:
+Optional signing secrets (Settings → Secrets and variables → Actions); without them a cached debug key is used:
 
 | Secret | Value |
 |---|---|
@@ -25,7 +26,8 @@ keytool -genkeypair -v -keystore fire.jks -alias fire -keyalg RSA -keysize 2048 
 ```bash
 FIRE_HOST=192.168.1.50 launcher/fire-install.sh --release <owner>/<repo>   # latest release
 FIRE_HOST=192.168.1.50 launcher/fire-install.sh --apk cleanyourtv-fire.apk # an artifact
-FIRE_HOST=192.168.1.50 launcher/fire-install.sh --theme ../my-theme        # local build + theme
+FIRE_HOST=192.168.1.50 launcher/fire-install.sh                           # local build, launcher/fire-theme
+FIRE_HOST=192.168.1.50 launcher/fire-install.sh --theme ../my-theme        # another theme
 FIRE_HOST=192.168.1.50 launcher/fire-install.sh --restore                  # back to Amazon's home
 ```
 
