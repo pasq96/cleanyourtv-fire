@@ -366,7 +366,11 @@ final class Config {
         boolean longPressMove = res.getBoolean(R.bool.long_press_move);
         boolean iconBanners = res.getBoolean(R.bool.icon_banners);
         // Fire OS: most apps declare no leanback entry, and the remote has a Menu key; a theme can still turn these off.
-        if (fireOs) tileMenu = library = libraryButton = showAllApps = longPressMove = iconBanners = true;
+        if (fireOs) {
+            tileMenu = library = libraryButton = showAllApps = longPressMove = iconBanners = true;
+            // Smaller tiles than the 4-column default on a 1080p Fire TV; Launcher settings goes from 4 to 8.
+            if (columns == 4) columns = 6;
+        }
         String glowStyle = res.getString(R.string.glow_style);
         boolean applied = false;
 
