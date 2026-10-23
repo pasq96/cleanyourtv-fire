@@ -5,6 +5,8 @@ import android.app.AlertDialog;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.view.View;
@@ -13,7 +15,12 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /** Remote-friendly settings owned by the launcher; system settings stay one row away. */
 public final class LauncherSettingsActivity extends Activity {
@@ -28,7 +35,7 @@ public final class LauncherSettingsActivity extends Activity {
     private TextView advancedChoice;
     private TextView followThemeChoice;
     private TextView themeChoice;
-    private TextView sortChoice;
+    private TextView sortChoice, vpnChoice;
     private int columns;
     private int rowsBelowDock;
     private int dockOpacity;
@@ -120,6 +127,19 @@ public final class LauncherSettingsActivity extends Activity {
                         .show();
             }
         });
+        vpnChoice = findViewById(R.id.vpnChoice);
+        vpnChoice.setOnClickListener(v -> pickVpnApps());
+        findViewById(R.id.hiddenChoice).setOnClickListener(v -> pickHiddenApps());
+        findViewById(R.id.resetChoice).setOnClickListener(v -> new AlertDialog.Builder(this)
+                .setTitle(R.string.reset_defaults)
+                .setMessage(R.string.reset_defaults_hint)
+                .setPositiveButton(R.string.reset_defaults, (d, w) -> {
+                    // Back to the built-in setup: no VPN app, theme and layout choices cleared (hidden apps stay as they are).
+                    choices.edit().clear().putString(Config.VPN_APP_KEY, "").commit();
+                    changed();
+                    recreate();
+                })
+                .setNegativeButton(android.R.string.cancel, null).show());
         sortChoice = findViewById(R.id.sortChoice);
         sortChoice.setOnClickListener(v -> {
             choices.edit().putBoolean(Themes.SORT_RECENT_KEY, !Themes.sortRecent(this)).apply();
@@ -155,7 +175,7 @@ public final class LauncherSettingsActivity extends Activity {
         followThemeChoice = findViewById(R.id.followThemeChoice);
         followThemeChoice.setOnClickListener(v -> {
             if (!hasOnTvChoices()) return;
-            choices.edit().remove("columns").remove(Config.ROWS_BELOW_DOCK_KEY).remove("animations")
+            choices.edit().remove(Config.VPN_APP_KEY).remove("columns").remove(Config.ROWS_BELOW_DOCK_KEY).remove("animations")
                     .remove("advanced_effects").remove(Config.WALLPAPER_CHOICE_KEY)
                     .remove(Config.DOCK_OPACITY_KEY).commit();
             Config current = Config.load(this);
@@ -267,6 +287,12 @@ public final class LauncherSettingsActivity extends Activity {
                         : wallpaperCurrent != null ? wallpaperCurrent
                         : getString(R.string.wallpaper_theme_default)));
         followThemeChoice.setSelected(!hasOnTvChoices());
+        String vpns = choices.getString(Config.VPN_APP_KEY, null);
+        if (vpns == null) vpns = Config.load(this).vpnApp;
+        List<String> names = new ArrayList<>();
+        for (String pkg : vpns.split(",")) if (!pkg.trim().isEmpty()) names.add(AppActions.label(this, pkg.trim()));
+        vpnChoice.setText(getString(R.string.vpn_state, names.isEmpty() ? getString(R.string.vpn_none)
+                : android.text.TextUtils.join(", ", names)));
         sortChoice.setText(getString(R.string.sort_state,
                 getString(Themes.sortRecent(this) ? R.string.sort_recent : R.string.sort_manual)));
         File dir = Config.dir(this);
@@ -277,9 +303,79 @@ public final class LauncherSettingsActivity extends Activity {
     }
 
     private boolean hasOnTvChoices() {
-        return choices.contains("columns") || choices.contains(Config.ROWS_BELOW_DOCK_KEY)
+        return choices.contains(Config.VPN_APP_KEY) || choices.contains("columns") || choices.contains(Config.ROWS_BELOW_DOCK_KEY)
                 || choices.contains("animations") || choices.contains("advanced_effects")
                 || choices.contains(Config.WALLPAPER_CHOICE_KEY) || choices.contains(Config.DOCK_OPACITY_KEY);
+    }
+
+    /** Launchable apps that are not hidden by the system, sorted by name: package -> label. */
+    private List<String[]> launchableApps(boolean vpnOnly) {
+        PackageManager pm = getPackageManager();
+        List<ResolveInfo> found = new ArrayList<>();
+        if (vpnOnly) {
+            for (ResolveInfo ri : pm.queryIntentServices(new Intent("android.net.VpnService"), 0)) found.add(ri);
+        } else {
+            found.addAll(pm.queryIntentActivities(new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER), 0));
+            found.addAll(pm.queryIntentActivities(new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LEANBACK_LAUNCHER), 0));
+        }
+        Set<String> seen = new HashSet<>();
+        List<String[]> out = new ArrayList<>();
+        for (ResolveInfo ri : found) {
+            String pkg = ri.activityInfo != null ? ri.activityInfo.packageName : ri.serviceInfo.packageName;
+            if (pkg.equals(getPackageName()) || Arrays.asList(FireOs.HIDDEN).contains(pkg) || !seen.add(pkg)) continue;
+            out.add(new String[]{pkg, AppActions.label(this, pkg)});
+        }
+        Collections.sort(out, (a, b) -> a[1].compareToIgnoreCase(b[1]));
+        return out;
+    }
+
+    private void pickVpnApps() {
+        List<String[]> apps = launchableApps(true);
+        if (apps.isEmpty()) {
+            Toast.makeText(this, R.string.vpn_no_apps, Toast.LENGTH_LONG).show();
+            return;
+        }
+        String saved = choices.getString(Config.VPN_APP_KEY, null);
+        Set<String> current = new HashSet<>(Arrays.asList((saved != null ? saved : Config.load(this).vpnApp).split("\\s*,\\s*")));
+        CharSequence[] labels = new CharSequence[apps.size()];
+        boolean[] on = new boolean[apps.size()];
+        for (int i = 0; i < labels.length; i++) {
+            labels[i] = apps.get(i)[1];
+            on[i] = current.contains(apps.get(i)[0]);
+        }
+        new AlertDialog.Builder(this).setTitle(R.string.vpn_apps)
+                .setMultiChoiceItems(labels, on, (d, which, checked) -> on[which] = checked)
+                .setPositiveButton(android.R.string.ok, (d, w) -> {
+                    List<String> picked = new ArrayList<>();
+                    for (int i = 0; i < on.length; i++) if (on[i]) picked.add(apps.get(i)[0]);
+                    choices.edit().putString(Config.VPN_APP_KEY, android.text.TextUtils.join(",", picked)).apply();
+                    changed();
+                    refresh();
+                })
+                .setNegativeButton(android.R.string.cancel, null).show();
+    }
+
+    /** Every launchable app with a tick when it is hidden from Home; OK applies the changes. */
+    private void pickHiddenApps() {
+        List<String[]> apps = launchableApps(false);
+        Set<String> hidden = LibraryApps.loadRemoved(this);
+        CharSequence[] labels = new CharSequence[apps.size()];
+        boolean[] on = new boolean[apps.size()], was = new boolean[apps.size()];
+        for (int i = 0; i < labels.length; i++) {
+            labels[i] = apps.get(i)[1];
+            on[i] = was[i] = hidden.contains(apps.get(i)[0]);
+        }
+        new AlertDialog.Builder(this).setTitle(R.string.hidden_apps)
+                .setMultiChoiceItems(labels, on, (d, which, checked) -> on[which] = checked)
+                .setPositiveButton(android.R.string.ok, (d, w) -> {
+                    boolean any = false;
+                    for (int i = 0; i < on.length; i++) {
+                        if (on[i] == was[i]) continue;
+                        any |= LibraryApps.save(this, apps.get(i)[0], !on[i]);
+                    }
+                    if (any) changed();
+                })
+                .setNegativeButton(android.R.string.cancel, null).show();
     }
 
     private void open(Intent intent) {

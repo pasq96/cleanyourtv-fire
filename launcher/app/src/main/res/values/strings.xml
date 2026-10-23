@@ -168,4 +168,13 @@
     <string name="restore_failed">No backup found or it is unreadable</string>
     <string name="theme_glass">Glass (dock glass, glow)</string>
     <string name="theme_aurora">Aurora (dark blue, 6 columns)</string>
+    <string name="vpn_pill_on">VPN on</string>
+    <string name="vpn_pill_off">VPN off</string>
+    <string name="vpn_state">VPN apps: %1$s</string>
+    <string name="vpn_none">none</string>
+    <string name="vpn_apps">VPN apps</string>
+    <string name="vpn_no_apps">No VPN app installed on this device</string>
+    <string name="hidden_apps">Apps hidden from Home</string>
+    <string name="reset_defaults">Reset to defaults</string>
+    <string name="reset_defaults_hint">Clears theme and layout choices and sets VPN to none. Hidden apps stay as they are.</string>
 </resources>

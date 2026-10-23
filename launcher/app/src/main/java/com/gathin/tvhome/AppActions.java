@@ -47,7 +47,7 @@ final class AppActions {
         }
     }
 
-    private static String label(Context context, String pkg) {
+    static String label(Context context, String pkg) {
         PackageManager pm = context.getPackageManager();
         try {
             return String.valueOf(pm.getApplicationLabel(pm.getApplicationInfo(pkg, 0)));

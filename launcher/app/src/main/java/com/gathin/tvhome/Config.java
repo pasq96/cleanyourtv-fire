@@ -38,6 +38,7 @@ final class Config {
     static final String WALLPAPER_NAME = "wallpaper.jpg";
     static final String SETTINGS_NAME = "launcher_settings";
     static final String ROWS_BELOW_DOCK_KEY = "rows_below_dock";
+    static final String VPN_APP_KEY = "vpn_app";
     static final String WALLPAPER_CHOICE_KEY = "wallpaper_choice";
     static final String DOCK_OPACITY_KEY = "dock_opacity";
     /**
@@ -456,6 +457,8 @@ final class Config {
         SharedPreferences choices = ctx.getSharedPreferences(SETTINGS_NAME, Context.MODE_PRIVATE);
         // Unmounted storage looks like a theme reset; compare only once the file is readable.
         if (mounted) syncThemeChoices(choices, dir, file);
+        // VPN apps picked in Launcher settings (comma-separated packages; empty = none) win over the theme's vpn_app.
+        if (choices.contains(VPN_APP_KEY)) vpn = choices.getString(VPN_APP_KEY, "").trim();
         int chosenColumns = choices.getInt("columns", columns);
         if (chosenColumns >= 4 && chosenColumns <= 8) columns = chosenColumns;
         int chosenRows = choices.getInt(ROWS_BELOW_DOCK_KEY, rowsBelow);

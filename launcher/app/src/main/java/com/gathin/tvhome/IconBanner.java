@@ -4,6 +4,10 @@ import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.Path;
+import android.graphics.Rect;
+import android.graphics.RectF;
 import android.graphics.drawable.AdaptiveIconDrawable;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
@@ -14,8 +18,8 @@ import android.graphics.drawable.Drawable;
  */
 final class IconBanner {
     static final int W = 320, H = 180;
-    /** Adaptive foreground at 1.08 H puts its 72/108 safe zone at 0.72 H; a plain icon takes 0.56 H. */
-    private static final float ADAPTIVE_FG = 1.08f, PLAIN_ICON = 0.56f;
+    /** Adaptive foreground at 1.08 H puts its 72/108 safe zone at 0.72 H; a plain icon takes 0.62 H. */
+    private static final float ADAPTIVE_FG = 1.08f, PLAIN_ICON = 0.62f;
 
     private IconBanner() {}
 
@@ -36,8 +40,25 @@ final class IconBanner {
             if (fg != null) drawCentered(c, fg, (int) (H * ADAPTIVE_FG));
         } else {
             Bitmap src = render(icon, 96);
+            // Backdrop: the icon itself enlarged to cover the tile and blurred (scaled down, then up with filtering),
+            // dimmed so the sharp icon on top stands out; the edge colour shows through where the icon is see-through.
             c.drawColor(edgeColor(src));
-            drawCentered(c, icon, (int) (H * PLAIN_ICON));
+            Bitmap tiny = Bitmap.createScaledBitmap(src, 6, 6, true);
+            Paint smooth = new Paint(Paint.FILTER_BITMAP_FLAG | Paint.ANTI_ALIAS_FLAG);
+            smooth.setAlpha(210);
+            c.save();
+            c.translate(0, (H - W) / 2f);
+            c.drawBitmap(tiny, null, new Rect(0, 0, W, W), smooth);
+            c.restore();
+            c.drawColor(0x66000000);
+            // Sharp icon, a little larger than before, with softly rounded corners.
+            int size = (int) (H * PLAIN_ICON), left = (W - size) / 2, top = (H - size) / 2;
+            Path clip = new Path();
+            clip.addRoundRect(new RectF(left, top, left + size, top + size), size * 0.2f, size * 0.2f, Path.Direction.CW);
+            c.save();
+            c.clipPath(clip);
+            drawCentered(c, icon, size);
+            c.restore();
         }
         return new BitmapDrawable(res, out);
     }

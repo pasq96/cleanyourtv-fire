@@ -149,6 +149,23 @@
             android:text="@string/restore" />
 
         <TextView
+            android:id="@+id/vpnChoice"
+            style="@style/SettingsRow"
+            android:layout_marginTop="18dp" />
+
+        <TextView
+            android:id="@+id/hiddenChoice"
+            style="@style/SettingsRow"
+            android:layout_marginTop="10dp"
+            android:text="@string/hidden_apps" />
+
+        <TextView
+            android:id="@+id/resetChoice"
+            style="@style/SettingsRow"
+            android:layout_marginTop="18dp"
+            android:text="@string/reset_defaults" />
+
+        <TextView
             android:id="@+id/defaultHomeChoice"
             style="@style/SettingsRow"
             android:layout_marginTop="28dp"

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Four glass tiles in the adaptive icon's safe zone; the accent one is the focused app. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">
+    <path android:fillColor="#E6FFFFFF" android:pathData="M31.0,24.0h13a7,7 0 0 1 7,7v13a7,7 0 0 1 -7,7h-13a7,7 0 0 1 -7,-7v-13a7,7 0 0 1 7,-7z" />
+    <path android:fillColor="#FF6EC1FF" android:pathData="M64.0,24.0h13a7,7 0 0 1 7,7v13a7,7 0 0 1 -7,7h-13a7,7 0 0 1 -7,-7v-13a7,7 0 0 1 7,-7z" />
+    <path android:fillColor="#8CFFFFFF" android:pathData="M31.0,57.0h13a7,7 0 0 1 7,7v13a7,7 0 0 1 -7,7h-13a7,7 0 0 1 -7,-7v-13a7,7 0 0 1 7,-7z" />
+    <path android:fillColor="#8CFFFFFF" android:pathData="M64.0,57.0h13a7,7 0 0 1 7,7v13a7,7 0 0 1 -7,7h-13a7,7 0 0 1 -7,-7v-13a7,7 0 0 1 7,-7z" />
+</vector>

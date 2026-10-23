@@ -122,4 +122,13 @@
     <string name="restore_failed">Nessun backup trovato o illeggibile</string>
     <string name="theme_glass">Glass (dock vetro, bagliore)</string>
     <string name="theme_aurora">Aurora (blu scuro, 6 colonne)</string>
+    <string name="vpn_pill_on">VPN on</string>
+    <string name="vpn_pill_off">VPN off</string>
+    <string name="vpn_state">App VPN: %1$s</string>
+    <string name="vpn_none">nessuna</string>
+    <string name="vpn_apps">App VPN</string>
+    <string name="vpn_no_apps">Nessuna app VPN installata su questo dispositivo</string>
+    <string name="hidden_apps">App nascoste dalla Home</string>
+    <string name="reset_defaults">Ripristina predefiniti</string>
+    <string name="reset_defaults_hint">Azzera tema e scelte di layout e imposta la VPN su nessuna. Le app nascoste restano come sono.</string>
 </resources>

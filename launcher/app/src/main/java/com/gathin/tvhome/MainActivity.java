@@ -245,6 +245,10 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     private int packageSequence;
     /** The Inputs or Module cards dropdown while one is open, so onPause can close it. */
     private PopupWindow openPopup;
+    /** Reorder started for one tile (hold OK, tile menu): ends as soon as it is put down. */
+    private boolean singleMove;
+    private TextView btnVpn, btnLauncher;
+    private boolean showNetworkPill = true;
     /** Reorder mode is on (top-bar button). */
     private boolean reordering;
     /** Key of the tile being carried in reorder mode, or null. */
@@ -586,11 +590,21 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         View btnSettings = findViewById(R.id.btnSettings);
         btnInputs.setOnClickListener(v -> showInputs());
         btnWifi.setOnClickListener(v -> openNetworkPill());
+        btnVpn = findViewById(R.id.btnVpn);
+        btnVpn.setOnClickListener(v -> openVpn());
+        btnVpn.setOnLongClickListener(v -> {
+            open(new Intent(Settings.ACTION_VPN_SETTINGS));
+            return true;
+        });
+        btnLauncher = findViewById(R.id.btnLauncher);
+        btnLauncher.setOnClickListener(v -> startActivityForResult(
+                new Intent(this, LauncherSettingsActivity.class), LAUNCHER_SETTINGS_REQUEST));
         btnWifi.setOnLongClickListener(v -> {
             open(systemIntent(Settings.ACTION_WIFI_SETTINGS));
             return true;
         });
         launcherSettingsButton = cfg.launcherSettingsButton;
+        btnLauncher.setVisibility(launcherSettingsButton || cfg.topMenu ? View.GONE : View.VISIBLE);
         if (launcherSettingsButton) {
             ((TextView) btnSettings).setText(R.string.launcher_settings);
             ((TextView) btnSettings).setCompoundDrawablesRelativeWithIntrinsicBounds(R.drawable.ic_home_settings_pill, 0, 0, 0);
@@ -604,6 +618,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         btnReorder.setOnClickListener(v -> toggleReorder());
         btnReorder.setVisibility(cfg.reorderButton ? View.VISIBLE : View.GONE);
         if (!cfg.showNetworkPill) btnWifi.setVisibility(View.GONE);
+        showNetworkPill = cfg.showNetworkPill;
         showInputsPill = cfg.showInputsPill;
         btnLibraryTop = findViewById(R.id.btnLibraryTop);
         btnLibraryTop.setOnClickListener(v -> {
@@ -662,11 +677,13 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         };
         btnInputs.setOnKeyListener(pillKeys);
         btnWifi.setOnKeyListener(pillKeys);
+        btnVpn.setOnKeyListener(pillKeys);
+        btnLauncher.setOnKeyListener(pillKeys);
         btnSettings.setOnKeyListener(pillKeys);
         btnReorder.setOnKeyListener(pillKeys);
         btnLibraryTop.setOnKeyListener(pillKeys);
         if (advancedEffects) {
-            for (View button : new View[]{btnInputs, btnWifi, btnReorder, btnLibraryTop, btnSettings}) {
+            for (View button : new View[]{btnInputs, btnWifi, btnVpn, btnLauncher, btnReorder, btnLibraryTop, btnSettings}) {
                 button.setOnFocusChangeListener((view, focused) -> view.animate()
                         .scaleX(focused ? 1.04f : 1f).scaleY(focused ? 1.04f : 1f)
                         .setDuration(reducedMotion ? Motion.REDUCED_MS : 160).start());
@@ -1147,7 +1164,11 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
                     return true;
                 default:
                     if (ok || back) {
-                        if (!down) drop();
+                        if (!down) {
+                            drop();
+                            // A move started by hold-OK or the tile menu ends when the tile is put down: OK opens apps again.
+                            if (singleMove) endReorder();
+                        }
                         return true;
                     }
                     return super.dispatchKeyEvent(event);
@@ -1334,6 +1355,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     /** Ends the mode and saves the order if it changed since the mode started. */
     private void endReorder() {
         if (!reordering) return;
+        singleMove = false;
         dockEditing = false;
         dockEditSlot = -1;
         dockEditAppKey = null;
@@ -2367,28 +2389,17 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             }
         } catch (Exception ignored) {
         }
-        // With a VPN app configured, a VPN that is down matters too: show a red "VPN off" capsule then.
+        // The VPN has its own pill: green "VPN on", or red "VPN off" when an app is set but the tunnel is down.
         boolean vpnDown = !vpn && online && !vpnApp.isEmpty();
-        if (vpn || vpnDown) {
-            // Network name, then the green lock-and-VPN (or red "VPN off") capsule drawn in place of the word.
-            String badge = getString(vpn ? R.string.vpn : R.string.vpn_off);
-            VpnBadge span = new VpnBadge(vpn ? getDrawable(R.drawable.ic_lock) : null, density);
-            // The pill has a maximum width and ellipsizes at the end, which would cut the badge off after
-            // a long network name, so shorten the name to whatever room the badge leaves. The total paddings
-            // include the Wi-Fi icon.
-            TextPaint paint = btnWifi.getPaint();
-            float room = btnWifi.getMaxWidth() - btnWifi.getTotalPaddingStart() - btnWifi.getTotalPaddingEnd()
-                    - span.getSize(paint, badge, 0, badge.length(), null) - paint.measureText(" ") - 2 * density;
-            String name = TextUtils.ellipsize(text, paint, Math.max(0, room), TextUtils.TruncateAt.END).toString();
-            // A long badge ("VPN отключён") can leave room for a stub like "MT…", which says nothing and, after
-            // rounding, can push the badge itself out of the pill. Show the badge alone then.
-            // The space stays even then: a line holding only the span gets no font metrics and collapses.
-            text = name.length() < text.length() && name.length() < 5 ? "" : name;
-            SpannableString label = new SpannableString(text + " " + badge);
-            label.setSpan(span, text.length() + 1, label.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-            if (!TextUtils.equals(btnWifi.getText(), label)) btnWifi.setText(label);
-        } else if (!TextUtils.equals(btnWifi.getText(), text)) {
-            btnWifi.setText(text);
+        if (!TextUtils.equals(btnWifi.getText(), text)) btnWifi.setText(text);
+        if (btnVpn != null) {
+            boolean show = (vpn || vpnDown) && showNetworkPill && !topMenu;
+            btnVpn.setVisibility(show ? View.VISIBLE : View.GONE);
+            if (show) {
+                btnVpn.setText(vpn ? R.string.vpn_pill_on : R.string.vpn_pill_off);
+                btnVpn.setBackgroundResource(vpn ? R.drawable.pill_vpn_on : R.drawable.pill_vpn_off);
+                btnVpn.setTextColor(getColorStateList(vpn ? R.color.pill_vpn_on_text : R.color.pill_vpn_off_text));
+            }
         }
         if (wifiIconOnly) {
             btnWifi.setContentDescription(btnWifi.getText());
@@ -2480,11 +2491,40 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         return 0xFF000000 | (r << 16) | (g << 8) | b;
     }
 
-    /** The network pill opens the VPN app when one is configured and installed, otherwise Wi-Fi settings. */
+    /** The network pill opens Wi-Fi settings. */
     private void openNetworkPill() {
-        Intent i = vpnApp.isEmpty() ? null : getPackageManager().getLeanbackLaunchIntentForPackage(vpnApp);
-        if (i == null && !vpnApp.isEmpty()) i = getPackageManager().getLaunchIntentForPackage(vpnApp);
-        open(i != null ? i : systemIntent(Settings.ACTION_WIFI_SETTINGS));
+        open(systemIntent(Settings.ACTION_WIFI_SETTINGS));
+    }
+
+    /** The VPN pill opens the chosen VPN app (a small menu when several are chosen), else the system VPN settings. */
+    private void openVpn() {
+        PackageManager pm = getPackageManager();
+        List<String> pkgs = new ArrayList<>();
+        for (String pkg : vpnApp.split(",")) {
+            pkg = pkg.trim();
+            if (!pkg.isEmpty() && launchIntent(pm, pkg) != null) pkgs.add(pkg);
+        }
+        if (pkgs.isEmpty()) {
+            open(new Intent(Settings.ACTION_VPN_SETTINGS));
+        } else if (pkgs.size() == 1) {
+            open(launchIntent(pm, pkgs.get(0)));
+        } else {
+            View panel = getLayoutInflater().inflate(R.layout.popup_inputs, root, false);
+            LinearLayout rows = panel.findViewById(R.id.rows);
+            PopupWindow popup = glassPopup(panel, (int) (200 * density));
+            for (String pkg : pkgs) {
+                addSettingsMenuRow(rows, popup, AppActions.label(this, pkg), () -> open(launchIntent(pm, pkg)));
+            }
+            panel.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
+            popup.setWidth(Math.max((int) (200 * density), panel.getMeasuredWidth()));
+            dropIn(popup, panel, btnVpn, Gravity.START);
+            rows.getChildAt(0).requestFocus();
+        }
+    }
+
+    private static Intent launchIntent(PackageManager pm, String pkg) {
+        Intent i = pm.getLeanbackLaunchIntentForPackage(pkg);
+        return i != null ? i : pm.getLaunchIntentForPackage(pkg);
     }
 
 
@@ -2930,7 +2970,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         if (at < 0) return;
         focusTile(at);
         pickUp(at);
-        Toast.makeText(this, R.string.reorder_hint, Toast.LENGTH_LONG).show();
+        singleMove = true;
     }
 
     /**
@@ -2991,6 +3031,10 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     }
 
     private void addSettingsMenuRow(LinearLayout rows, PopupWindow popup, int title, Runnable action) {
+        addSettingsMenuRow(rows, popup, getString(title), action);
+    }
+
+    private void addSettingsMenuRow(LinearLayout rows, PopupWindow popup, CharSequence title, Runnable action) {
         View row = getLayoutInflater().inflate(R.layout.item_input, rows, false);
         row.findViewById(R.id.icon).setVisibility(View.GONE);
         row.findViewById(R.id.dot).setVisibility(View.GONE);

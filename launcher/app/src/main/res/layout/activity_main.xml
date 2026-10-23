@@ -323,6 +323,17 @@
                     android:nextFocusDown="@+id/grid" />
 
                 <TextView
+                    android:id="@+id/btnVpn"
+                    style="@style/TopButton"
+                    android:paddingStart="18dp"
+                    android:paddingEnd="18dp"
+                    android:visibility="gone"
+                    android:singleLine="true"
+                    android:background="@drawable/pill_vpn_off"
+                    android:text="@string/vpn_pill_off"
+                    android:nextFocusDown="@+id/grid" />
+
+                <TextView
                     android:id="@+id/btnReorder"
                     style="@style/TopButtonIcon"
                     android:contentDescription="@string/reorder"
@@ -335,6 +346,13 @@
                     android:visibility="gone"
                     android:contentDescription="@string/app_library"
                     android:drawableStart="@drawable/ic_apps"
+                    android:nextFocusDown="@+id/grid" />
+
+                <TextView
+                    android:id="@+id/btnLauncher"
+                    style="@style/TopButtonIcon"
+                    android:contentDescription="@string/launcher_settings"
+                    android:drawableStart="@drawable/ic_home_settings_pill"
                     android:nextFocusDown="@+id/grid" />
 
                 <TextView
