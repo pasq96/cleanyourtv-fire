@@ -367,7 +367,7 @@ public final class LauncherSettingsActivity extends Activity {
         row.setFocusable(true);
         row.setClickable(true);
         row.setBackgroundResource(R.drawable.settings_choice_bg);
-        row.setTextColor(0xFFFFFFFF);
+        row.setTextColor(getResources().getColorStateList(R.drawable.pill_text, getTheme()));
         row.setTextSize(18);
         row.setGravity(android.view.Gravity.CENTER_VERTICAL);
         row.setPadding((int) (18 * d), 0, (int) (18 * d), 0);

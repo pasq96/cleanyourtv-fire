@@ -833,6 +833,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             recreate();
             return;
         }
+        askLocationForSsid();
         restartIdleClock();
         promptsPaused = false;
         if (grid.getAdapter() == null) grid.setAdapter(adapter);   // dropped by onTrimMemory
@@ -2355,6 +2356,25 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     }
 
     /** Shows the Wi-Fi network name on the button when we can read it, otherwise the connection type. */
+    /** Android hides the Wi-Fi name without the location permission: ask once, so the pill can show the network name. */
+    private void askLocationForSsid() {
+        if (checkSelfPermission(android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) return;
+        SharedPreferences boot = getSharedPreferences("boot", MODE_PRIVATE);
+        if (boot.getBoolean("location_asked", false)) return;
+        boot.edit().putBoolean("location_asked", true).apply();
+        try {
+            requestPermissions(new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, 77);
+        } catch (RuntimeException ignored) {
+            // No permission dialog on this TV: the pill keeps saying Wi-Fi.
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] results) {
+        super.onRequestPermissionsResult(requestCode, permissions, results);
+        if (requestCode == 77) updateWifiLabel();
+    }
+
     private void updateWifiLabel() {
         String text = getString(R.string.wifi);
         boolean vpn = false, online = false;

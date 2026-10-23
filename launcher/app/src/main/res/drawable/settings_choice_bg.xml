@@ -1,23 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Liquid-glass row, same family as pill_bg: frosted gradient and hairline, solid light when focused, blue when selected. -->
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:state_focused="true">
         <shape android:shape="rectangle">
-            <solid android:color="#5574A987" />
-            <corners android:radius="14dp" />
-            <stroke android:width="2dp" android:color="#FFB9E7C7" />
+            <solid android:color="#F5FFFFFF" />
+            <corners android:radius="16dp" />
         </shape>
     </item>
     <item android:state_selected="true">
         <shape android:shape="rectangle">
-            <solid android:color="#334DAE6D" />
-            <corners android:radius="14dp" />
-            <stroke android:width="1dp" android:color="#FF4DAE6D" />
+            <gradient android:angle="270" android:startColor="#736EC1FF" android:endColor="#406EC1FF" />
+            <stroke android:width="1.5dp" android:color="#FF6EC1FF" />
+            <corners android:radius="16dp" />
         </shape>
     </item>
     <item>
         <shape android:shape="rectangle">
-            <solid android:color="#FF242B34" />
-            <corners android:radius="14dp" />
+            <gradient android:angle="270" android:startColor="#2EFFFFFF" android:endColor="#14FFFFFF" />
+            <stroke android:width="1dp" android:color="#38FFFFFF" />
+            <corners android:radius="16dp" />
         </shape>
     </item>
 </selector>
