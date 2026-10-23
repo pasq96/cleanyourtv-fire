@@ -18,16 +18,15 @@ android {
         versionName = '2.6'
     }
 
-    // CI: a fixed key from repository secrets (fire-apk.yml), so every build installs over the previous one.
-    def fixedKey = System.getenv('SIGNING_KEYSTORE')
+    // One fixed key for every build (CI secrets win when set), so each APK installs over the previous one.
+    // fire-release.jks is committed on purpose: this is a sideloaded personal launcher, not a store app.
+    def keystore = System.getenv('SIGNING_KEYSTORE') ?: file('fire-release.jks').path
     signingConfigs {
-        if (fixedKey) {
-            fixed {
-                storeFile = file(fixedKey)
-                storePassword = System.getenv('SIGNING_PASSWORD')
-                keyAlias = System.getenv('SIGNING_ALIAS') ?: 'fire'
-                keyPassword = System.getenv('SIGNING_PASSWORD')
-            }
+        fixed {
+            storeFile = file(keystore)
+            storePassword = System.getenv('SIGNING_PASSWORD') ?: 'cleanyourtv'
+            keyAlias = System.getenv('SIGNING_ALIAS') ?: 'fire'
+            keyPassword = System.getenv('SIGNING_PASSWORD') ?: 'cleanyourtv'
         }
     }
 
@@ -37,8 +36,7 @@ android {
             minifyEnabled = true
             shrinkResources = true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            // Sideloaded over ADB, never published: sign with the debug key so it installs over a debug build.
-            signingConfig = fixedKey ? signingConfigs.fixed : signingConfigs.debug
+            signingConfig = signingConfigs.fixed
         }
     }
 

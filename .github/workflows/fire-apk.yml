@@ -58,13 +58,6 @@ jobs:
         run: |
           echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/fire.jks"
           echo "SIGNING_KEYSTORE=$RUNNER_TEMP/fire.jks" >> "$GITHUB_ENV"
-      # No secrets: keep one debug key across runs, so builds still install over each other.
-      - name: Debug key
-        if: env.KEYSTORE_B64 == ''
-        uses: actions/cache@v6
-        with:
-          path: ~/.android/debug.keystore
-          key: fire-debug-keystore
       - name: Unit tests and release build
         working-directory: launcher
         run: |

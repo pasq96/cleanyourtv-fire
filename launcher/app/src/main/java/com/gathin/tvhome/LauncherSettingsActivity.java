@@ -27,7 +27,7 @@ public final class LauncherSettingsActivity extends Activity {
     static final String EXTRA_REORDER = "com.gathin.tvhome.extra.REORDER_FROM_SETTINGS";
     private SharedPreferences choices;
     private final TextView[] columnChoices = new TextView[5];
-    private final TextView[] rowChoices = new TextView[4];
+    private final TextView[] rowChoices = new TextView[7];
     private static final int[] DOCK_OPACITIES = {100, 70, 50, 30};
     private final TextView[] dockChoices = new TextView[DOCK_OPACITIES.length];
     private TextView wallpaperChoice;
@@ -72,7 +72,7 @@ public final class LauncherSettingsActivity extends Activity {
                 refresh();
             });
         }
-        int[] rowIds = {R.id.rows0, R.id.rows1, R.id.rows2, R.id.rows3};
+        int[] rowIds = {R.id.rows0, R.id.rows1, R.id.rows2, R.id.rows3, R.id.rows4, R.id.rows5, R.id.rows6};
         for (int i = 0; i < rowIds.length; i++) {
             final int value = i;
             rowChoices[i] = findViewById(rowIds[i]);
