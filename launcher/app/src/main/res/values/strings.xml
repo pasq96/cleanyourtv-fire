@@ -210,9 +210,9 @@
     <string name="d_vpn">Apps the VPN button opens. Green = on, red = off.</string>
     <string name="d_backup">Saves settings, order and hidden apps to a file.</string>
     <string name="d_restore">Loads the saved file back.</string>
-    <string name="d_follow">Drops your choices and uses the theme's values.</string>
+    <string name="d_follow">Drops your choices and uses the theme\'s values.</string>
     <string name="d_reset">Clears every choice. VPN goes back to none.</string>
-    <string name="d_home">The system's default-home picker.</string>
+    <string name="d_home">The system\'s default-home picker.</string>
     <string name="d_tv">Android / Fire OS settings.</string>
     <string name="sec_buttons">Buttons and network</string>
     <string name="opt_inputs">Inputs button</string>
