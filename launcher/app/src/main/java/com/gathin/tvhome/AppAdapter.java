@@ -676,33 +676,39 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         bmp.getPixels(px, 0, n, 0, 0, n, n);
         bmp.recycle();
         float[] hsv = new float[3];
-        int best = 0xFF444444;
-        float bestScore = -1f;
+        // Dominant hue, not the single most vivid pixel: pixels vote by saturation and brightness into 12 hue
+        // buckets, and the winning bucket's average is the colour. Dark banners stay faithful to their main hue.
+        float[] weight = new float[12];
+        long[][] sum = new long[12][4];
         long r = 0, g = 0, b = 0;
         for (int p : px) {
             int pr = (p >> 16) & 0xFF, pg = (p >> 8) & 0xFF, pb = p & 0xFF;
             r += pr;
             g += pg;
             b += pb;
-            int max = Math.max(pr, Math.max(pg, pb));
-            int min = Math.min(pr, Math.min(pg, pb));
-            float sat = max == 0 ? 0f : (max - min) / (float) max;
-            float val = max / 255f;
-            float score = sat * Math.min(1f, val * 1.4f);   // saturated and not too dark
-            if (score > bestScore) {
-                bestScore = score;
-                best = p;
-            }
+            Color.RGBToHSV(pr, pg, pb, hsv);
+            float w = hsv[1] * Math.min(1f, hsv[2] * 1.6f);   // saturated, and not black
+            if (w < 0.05f) continue;
+            int bucket = Math.min(11, (int) (hsv[0] / 30f));
+            weight[bucket] += w;
+            sum[bucket][0] += pr;
+            sum[bucket][1] += pg;
+            sum[bucket][2] += pb;
+            sum[bucket][3]++;
         }
-        if (bestScore < 0.25f) {   // nearly monochrome banner (e.g. white): use its average, lifted
+        int top = 0;
+        for (int k = 1; k < 12; k++) if (weight[k] > weight[top]) top = k;
+        if (weight[top] < 0.25f * 4 || sum[top][3] == 0) {   // nearly monochrome banner (e.g. white): its average, lifted
             int avg = Color.rgb((int) (r / (n * n)), (int) (g / (n * n)), (int) (b / (n * n)));
             Color.colorToHSV(avg, hsv);
-            hsv[2] = Math.max(hsv[2], 0.55f);
+            hsv[2] = Math.max(hsv[2], 0.6f);
             return Color.HSVToColor(hsv);
         }
-        Color.colorToHSV(best, hsv);
-        hsv[1] = Math.min(1f, hsv[1] * 1.1f);
-        hsv[2] = Math.max(0.5f, hsv[2]);
+        Color.colorToHSV(Color.rgb((int) (sum[top][0] / sum[top][3]), (int) (sum[top][1] / sum[top][3]),
+                (int) (sum[top][2] / sum[top][3])), hsv);
+        // The glow is a faint white mask tinted with this colour: dark hues need to be pushed up to show at all.
+        hsv[1] = Math.min(1f, hsv[1] * 1.2f);
+        hsv[2] = Math.max(0.68f, hsv[2]);
         return Color.HSVToColor(hsv);
     }
 

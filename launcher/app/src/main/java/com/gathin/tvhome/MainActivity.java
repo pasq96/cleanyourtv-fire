@@ -350,6 +350,11 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     };
 
     @Override
+    protected void attachBaseContext(Context base) {
+        super.attachBaseContext(Lang.wrap(base));
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
@@ -536,7 +541,9 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             // Keep the hero below the header when the library is enabled on a short screen,
             // even when the theme requests an extra visible row below the dock.
             int shelfClearance = cfg.appLibrary ? hero.getMeasuredHeight() + (int) (40 * density) : 0;
-            int want = Math.max(shelfClearance, h - dockRow - gridRows - (int) (AppAdapter.BOTTOM_ROOM_DP * density));
+            // Launcher settings "dock height": each step lifts the dock 40dp, closing the gap under the top buttons.
+            int lift = getSharedPreferences(Config.SETTINGS_NAME, MODE_PRIVATE).getInt("dock_lift", 1) * (int) (40 * density);
+            int want = Math.max(shelfClearance, h - dockRow - gridRows - (int) (AppAdapter.BOTTOM_ROOM_DP * density) - lift);
             // Where the rows cannot fit even at the smallest tile (3 rows with the title on), the title keeps its
             // room above the dock and the last rows run off the bottom instead of the title drawing over the clock.
             if (MainActivity.this.dockRow && cfg.dockTitle && rowsBelowDock > 0) want = Math.max(want, (int) (AppAdapter.TITLE_ROOM_DP * density));
@@ -1790,7 +1797,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
                 // The colour washes down from the top edge and fades out three quarters of the way down,
                 // with a brighter band along the top like light over a horizon.
                 paint.setShader(new LinearGradient(0, 0, 0, h * 0.75f,
-                        new int[]{0x66FFFFFF, 0x24FFFFFF, 0x00FFFFFF},
+                        new int[]{0x78FFFFFF, 0x30FFFFFF, 0x00FFFFFF},
                         new float[]{0f, 0.4f, 1f},
                         Shader.TileMode.CLAMP));
                 canvas.drawRect(0, 0, w, h, paint);
@@ -1802,7 +1809,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             } else {
                 paint.setShader(new RadialGradient(
                         w * 0.32f, h * 0.42f, w * 0.62f,
-                        new int[]{0x5CFFFFFF, 0x26FFFFFF, 0x00FFFFFF},
+                        new int[]{0x70FFFFFF, 0x30FFFFFF, 0x00FFFFFF},
                         new float[]{0f, 0.45f, 1f},
                         Shader.TileMode.CLAMP));
             }

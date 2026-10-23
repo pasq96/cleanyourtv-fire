@@ -147,6 +147,38 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="5"
+                android:text="@string/dock_height"
+                android:textColor="#FFFFFFFF"
+                android:textSize="18sp" />
+
+            <TextView
+                style="@style/SettingsDesc"
+                android:text="@string/d_dock_height" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:orientation="horizontal">
+
+            <TextView android:id="@+id/lift0" style="@style/SettingsColumnChoice" android:text="0" />
+            <TextView android:id="@+id/lift1" style="@style/SettingsColumnChoice" android:text="1" />
+            <TextView android:id="@+id/lift2" style="@style/SettingsColumnChoice" android:text="2" />
+            <TextView android:id="@+id/lift3" style="@style/SettingsColumnChoice" android:text="3" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="5"
                 android:text="@string/dock_opacity_label"
                 android:textColor="#FFFFFFFF"
                 android:textSize="18sp" />
@@ -427,6 +459,24 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/languageChoice"
+                style="@style/SettingsRow"
+                android:layout_width="0dp"
+                android:layout_weight="5" />
+
+            <TextView
+                style="@style/SettingsDesc"
+                android:text="@string/d_lang" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
             android:gravity="center_vertical"
             android:orientation="horizontal">
 

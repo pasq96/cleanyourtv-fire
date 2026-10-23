@@ -3,6 +3,7 @@ package com.gathin.tvhome;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.ActivityNotFoundException;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -36,13 +37,19 @@ public final class LauncherSettingsActivity extends Activity {
     private TextView advancedChoice;
     private TextView followThemeChoice;
     private TextView themeChoice;
-    private TextView sortChoice, vpnChoice, bannerChoice;
+    private TextView sortChoice, vpnChoice, bannerChoice, languageChoice;
+    private final TextView[] liftChoices = new TextView[4];
     private final List<Runnable> toggleRefreshers = new ArrayList<>();
     private int columns;
     private int rowsBelowDock;
     private int dockOpacity;
     private boolean animations;
     private boolean advancedEffects;
+
+    @Override
+    protected void attachBaseContext(Context base) {
+        super.attachBaseContext(Lang.wrap(base));
+    }
 
     @Override
     protected void onCreate(Bundle state) {
@@ -148,6 +155,22 @@ public final class LauncherSettingsActivity extends Activity {
                     recreate();
                 })
                 .setNegativeButton(android.R.string.cancel, null).show());
+        int[] liftIds = {R.id.lift0, R.id.lift1, R.id.lift2, R.id.lift3};
+        for (int i = 0; i < liftIds.length; i++) {
+            final int value = i;
+            liftChoices[i] = findViewById(liftIds[i]);
+            liftChoices[i].setOnClickListener(v -> {
+                choices.edit().putInt("dock_lift", value).apply();
+                changed();
+                refresh();
+            });
+        }
+        languageChoice = findViewById(R.id.languageChoice);
+        languageChoice.setOnClickListener(v -> {
+            choices.edit().putString(Lang.KEY, Lang.next(Lang.chosen(this))).commit();
+            changed();
+            recreate();
+        });
         bannerChoice = findViewById(R.id.bannerChoice);
         bannerChoice.setOnClickListener(v -> {
             choices.edit().putInt(Themes.BANNER_STYLE_KEY, (Themes.bannerStyle(this) + 1) % 3).apply();
@@ -189,7 +212,7 @@ public final class LauncherSettingsActivity extends Activity {
             choices.edit().putString(Themes.KEY, next).remove("columns").remove(Config.ROWS_BELOW_DOCK_KEY)
                     .remove("animations").remove("advanced_effects").remove(Config.WALLPAPER_CHOICE_KEY)
                     .remove(Config.DOCK_OPACITY_KEY).remove("show_all_apps").remove("long_press_move")
-                    .remove("always_show_names").remove("show_inputs_pill").remove("show_network_pill").commit();
+                    .remove("always_show_names").remove("show_inputs_pill").remove("show_network_pill").remove("dock_lift").commit();
             changed();
             recreate();   // rows and toggles take the new theme's defaults
         });
@@ -306,6 +329,10 @@ public final class LauncherSettingsActivity extends Activity {
         int style = Themes.bannerStyle(this);
         bannerChoice.setText(getString(R.string.banner_state, getString(style == Themes.BANNER_STRETCH
                 ? R.string.banner_stretch : style == Themes.BANNER_GRADIENT ? R.string.banner_gradient : R.string.banner_off)));
+        for (int i = 0; i < liftChoices.length; i++) liftChoices[i].setSelected(choices.getInt("dock_lift", 1) == i);
+        String lang = Lang.chosen(this);
+        languageChoice.setText(getString(R.string.lang_state, getString(lang.equals("en") ? R.string.lang_en
+                : lang.equals("it") ? R.string.lang_it : R.string.lang_system)));
         for (Runnable r : toggleRefreshers) r.run();
         String vpns = choices.getString(Config.VPN_APP_KEY, null);
         if (vpns == null) vpns = Config.load(this).vpnApp;

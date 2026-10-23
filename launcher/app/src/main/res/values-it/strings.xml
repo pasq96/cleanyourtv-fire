@@ -172,4 +172,11 @@
     <string name="sec_buttons">Pulsanti e rete</string>
     <string name="opt_inputs">Pulsante Ingressi</string>
     <string name="d_reorder">Sposta le app nella griglia.</string>
+    <string name="dock_height">Altezza del dock</string>
+    <string name="d_dock_height">Alza il dock, riducendo lo spazio sotto i pulsanti in alto.</string>
+    <string name="lang_state">Lingua: %1$s</string>
+    <string name="lang_system">Sistema</string>
+    <string name="lang_en">English</string>
+    <string name="lang_it">Italiano</string>
+    <string name="d_lang">Lingua dell\'app. Sistema segue la TV.</string>
 </resources>
