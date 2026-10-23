@@ -205,7 +205,6 @@
     <string name="d_show_all">List apps that have no TV launcher entry too.</string>
     <string name="d_long_press">Hold OK on a tile to pick it up and move it.</string>
     <string name="d_names">On: every tile shows its name under it, even when the banner already has it. Off: the name appears only on the tile in focus.</string>
-    <string name="d_inputs">Button in the top bar for HDMI and other inputs.</string>
     <string name="d_wifi">Button in the top bar with the network name.</string>
     <string name="d_vpn">Apps the VPN button opens. Green = on, red = off.</string>
     <string name="d_backup">Saves settings, order and hidden apps to a file.</string>

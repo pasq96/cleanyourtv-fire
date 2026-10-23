@@ -159,7 +159,6 @@
     <string name="d_show_all">Mostra anche le app senza voce per la TV.</string>
     <string name="d_long_press">Tieni OK su una tile per prenderla e spostarla.</string>
     <string name="d_names">Sì: ogni tile mostra il nome sotto, anche se il banner lo contiene già. No: il nome compare solo sulla tile selezionata.</string>
-    <string name="d_inputs">Pulsante in alto per HDMI e altri ingressi.</string>
     <string name="d_wifi">Pulsante in alto con il nome della rete.</string>
     <string name="d_vpn">App aperte dal pulsante VPN. Verde = attiva, rosso = spenta.</string>
     <string name="d_backup">Salva impostazioni, ordine e app nascoste in un file.</string>
