@@ -103,7 +103,7 @@ final class AppLibraryDialog {
     private float scrollOffset, scrollOffsetY;
     private int span = 5;
     private boolean highlightShown;
-    private final int catalogWidth;
+    private final int catalogWidth, catalogHeight;
 
     private void stopHighlight() {
         if (spring != null) spring.cancel();
@@ -165,13 +165,14 @@ final class AppLibraryDialog {
         panel.setPadding(dp(12), dp(8), dp(12), dp(12));
         panel.setBackgroundResource(R.drawable.glass_panel);
         View decor = activity.getWindow().getDecorView();
-        catalogWidth = Math.min(dp(800), Math.max(dp(200), decor.getWidth() - dp(64)));
+        int screenW = decor.getWidth() > 0 ? decor.getWidth() : activity.getResources().getDisplayMetrics().widthPixels;
+        catalogWidth = Math.min(dp(800), Math.max(dp(200), screenW - dp(64)));
         int width = catalogWidth;
         // A vertical grid: as many columns as fit, and a tall panel so several rows show at once.
         span = Math.max(2, (catalogWidth - dp(44)) / dp(144));
         int decorHeight = decor.getHeight();
-        int height = decorHeight > 0 ? Math.min(dp(500), Math.max(dp(280), decorHeight - dp(110))) : dp(420);
-        popup = new PopupWindow(panel, width, height, true);
+        catalogHeight = decorHeight > 0 ? Math.min(dp(500), Math.max(dp(280), decorHeight - dp(110))) : dp(420);
+        popup = new PopupWindow(panel, width, catalogHeight, true);
         popup.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         popup.setOutsideTouchable(true);
         popup.setAnimationStyle(0);
@@ -211,10 +212,10 @@ final class AppLibraryDialog {
         panel.animate().alpha(1f).setDuration(reducedMotion ? Motion.REDUCED_MS : 180).start();
     }
 
-    /** Called by the activity's existing package receiver; an uninstall cannot leave a stale action. */
     /** Packages with a leanback entry, from the last refresh. */
-    private final java.util.Set<String> tvPackages = new java.util.HashSet<>();
+    private final Set<String> tvPackages = new HashSet<>();
 
+    /** Called by the activity's existing package receiver; an uninstall cannot leave a stale action. */
     void refresh() {
         load(false);
     }
@@ -344,7 +345,7 @@ final class AppLibraryDialog {
 
     private void showCatalog() {
         stopHighlight();
-        resize(catalogWidth, dp(280));
+        resize(catalogWidth, catalogHeight);
         panel.removeAllViews();
         LinearLayout header = new LinearLayout(activity);
         header.setGravity(Gravity.CENTER_VERTICAL);
@@ -620,7 +621,6 @@ final class AppLibraryDialog {
             boolean home = onHome.test(pkg);
             boolean recent = LibraryApps.recent(installTimes.getOrDefault(pkg, 0L), catalogTime);
             status.setText(home ? R.string.library_on_home : recent ? R.string.library_recent : R.string.library_add_home);
-            status.setVisibility(View.VISIBLE);
             holder.itemView.setBackground(surface(home ? 0x1475BBA4 : 0x0CFFFFFF, 18));
             View check = holder.itemView.findViewById(R.id.dot);
             check.getLayoutParams().width = dp(home ? 18 : 8);
@@ -651,7 +651,7 @@ final class AppLibraryDialog {
                 boolean left = rtl ? key == KeyEvent.KEYCODE_DPAD_RIGHT : key == KeyEvent.KEYCODE_DPAD_LEFT;
                 boolean right = rtl ? key == KeyEvent.KEYCODE_DPAD_LEFT : key == KeyEvent.KEYCODE_DPAD_RIGHT;
                 return key == KeyEvent.KEYCODE_DPAD_UP && index < span
-                        || key == KeyEvent.KEYCODE_DPAD_DOWN && index + span >= apps.size()
+                        || key == KeyEvent.KEYCODE_DPAD_DOWN && index / span == (apps.size() - 1) / span
                         || left && col == 0
                         || right && (col == span - 1 || index == apps.size() - 1);
             });

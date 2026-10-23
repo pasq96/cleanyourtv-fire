@@ -134,7 +134,6 @@
     <string name="tile_disable">Disabilita</string>
     <string name="sec_look">Aspetto</string>
     <string name="sec_apps">App</string>
-    <string name="sec_network">Rete</string>
     <string name="sec_data">Backup e ripristino</string>
     <string name="sec_system">Sistema</string>
     <string name="banner_state">Banner: %1$s</string>

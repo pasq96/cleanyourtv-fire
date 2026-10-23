@@ -180,7 +180,6 @@
     <string name="tile_disable">Disable</string>
     <string name="sec_look">Look</string>
     <string name="sec_apps">Apps</string>
-    <string name="sec_network">Network</string>
     <string name="sec_data">Backup and reset</string>
     <string name="sec_system">System</string>
     <string name="banner_state">Banner: %1$s</string>

@@ -48,7 +48,6 @@ import android.os.SystemClock;
 import android.provider.Settings;
 import android.text.SpannableString;
 import android.text.Spanned;
-import android.text.TextPaint;
 import android.text.TextUtils;
 import android.text.style.ForegroundColorSpan;
 import android.util.TypedValue;
@@ -530,6 +529,8 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         // tvOS layout: push the dock row towards the bottom of the screen, leaving room for
         // rows_below_dock grid rows under it; the rest of the grid stays below until you press Down.
         int rowsBelowDock = cfg.rowsBelowDock;
+        // Launcher settings "dock height": each step lifts the dock 40dp, closing the gap under the top buttons.
+        final int lift = getSharedPreferences(Config.SETTINGS_NAME, MODE_PRIVATE).getInt("dock_lift", 1) * (int) (40 * density);
         grid.addOnLayoutChangeListener((v, l, t, r, b, ol, ot, or, ob) -> {
             int h = b - t;
             // Item height follows the tile size, which follows the columns and the rows that must fit (AppAdapter.tileWidthPx).
@@ -541,8 +542,6 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             // Keep the hero below the header when the library is enabled on a short screen,
             // even when the theme requests an extra visible row below the dock.
             int shelfClearance = cfg.appLibrary ? hero.getMeasuredHeight() + (int) (40 * density) : 0;
-            // Launcher settings "dock height": each step lifts the dock 40dp, closing the gap under the top buttons.
-            int lift = getSharedPreferences(Config.SETTINGS_NAME, MODE_PRIVATE).getInt("dock_lift", 1) * (int) (40 * density);
             int want = Math.max(shelfClearance, h - dockRow - gridRows - (int) (AppAdapter.BOTTOM_ROOM_DP * density) - lift);
             // Where the rows cannot fit even at the smallest tile (3 rows with the title on), the title keeps its
             // room above the dock and the last rows run off the bottom instead of the title drawing over the clock.
@@ -2355,7 +2354,6 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         root.invalidate();   // a resume that changes nothing on screen still draws once, so the refresh runs
     }
 
-    /** Shows the Wi-Fi network name on the button when we can read it, otherwise the connection type. */
     /** Android hides the Wi-Fi name without the location permission: ask once, so the pill can show the network name. */
     private void askLocationForSsid() {
         if (checkSelfPermission(android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) return;
@@ -2375,6 +2373,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         if (requestCode == 77) updateWifiLabel();
     }
 
+    /** Shows the Wi-Fi network name on the button when we can read it, otherwise the connection type. */
     private void updateWifiLabel() {
         String text = getString(R.string.wifi);
         boolean vpn = false, online = false;

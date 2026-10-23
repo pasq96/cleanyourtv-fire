@@ -45,6 +45,8 @@ public final class LauncherSettingsActivity extends Activity {
     private int dockOpacity;
     private boolean animations;
     private boolean advancedEffects;
+    /** VPN apps from the theme, used while no on-TV choice exists (Config is read once, not on every refresh). */
+    private String themeVpnApp;
 
     @Override
     protected void attachBaseContext(Context base) {
@@ -63,6 +65,7 @@ public final class LauncherSettingsActivity extends Activity {
             setResult(RESULT_OK, new Intent().putExtra(EXTRA_REORDER, true));
             finish();
         });
+        themeVpnApp = config.vpnApp;
         columns = config.columns;
         rowsBelowDock = config.rowsBelowDock;
         dockOpacity = config.dockOpacity;
@@ -111,6 +114,7 @@ public final class LauncherSettingsActivity extends Activity {
             reverseRow(columnChoices);
             reverseRow(rowChoices);
             reverseRow(dockChoices);
+            reverseRow(liftChoices);
         }
         wallpaperChoice = findViewById(R.id.wallpaperChoice);
         wallpaperChoice.setOnClickListener(v -> showWallpaperPicker());
@@ -222,7 +226,7 @@ public final class LauncherSettingsActivity extends Activity {
             choices.edit().remove(Config.VPN_APP_KEY).remove("columns").remove(Config.ROWS_BELOW_DOCK_KEY).remove("animations")
                     .remove("advanced_effects").remove(Config.WALLPAPER_CHOICE_KEY)
                     .remove(Config.DOCK_OPACITY_KEY).remove("show_all_apps").remove("long_press_move")
-                    .remove("always_show_names").remove("show_inputs_pill").remove("show_network_pill").commit();
+                    .remove("always_show_names").remove("show_inputs_pill").remove("show_network_pill").remove("dock_lift").commit();
             changed();
             recreate();
         });
@@ -335,7 +339,7 @@ public final class LauncherSettingsActivity extends Activity {
                 : lang.equals("it") ? R.string.lang_it : R.string.lang_system)));
         for (Runnable r : toggleRefreshers) r.run();
         String vpns = choices.getString(Config.VPN_APP_KEY, null);
-        if (vpns == null) vpns = Config.load(this).vpnApp;
+        if (vpns == null) vpns = themeVpnApp;
         List<String> names = new ArrayList<>();
         for (String pkg : vpns.split(",")) if (!pkg.trim().isEmpty()) names.add(AppActions.label(this, pkg.trim()));
         vpnChoice.setText(getString(R.string.vpn_state, names.isEmpty() ? getString(R.string.vpn_none)
@@ -352,7 +356,8 @@ public final class LauncherSettingsActivity extends Activity {
     private boolean hasOnTvChoices() {
         return choices.contains(Config.VPN_APP_KEY) || choices.contains("columns") || choices.contains(Config.ROWS_BELOW_DOCK_KEY)
                 || choices.contains("animations") || choices.contains("advanced_effects")
-                || choices.contains(Config.WALLPAPER_CHOICE_KEY) || choices.contains(Config.DOCK_OPACITY_KEY);
+                || choices.contains(Config.WALLPAPER_CHOICE_KEY) || choices.contains(Config.DOCK_OPACITY_KEY)
+                || choices.contains("dock_lift");
     }
 
     /** An on/off row saved as a boolean choice that Config reads under the same key. */
@@ -419,7 +424,7 @@ public final class LauncherSettingsActivity extends Activity {
             return;
         }
         String saved = choices.getString(Config.VPN_APP_KEY, null);
-        Set<String> current = new HashSet<>(Arrays.asList((saved != null ? saved : Config.load(this).vpnApp).split("\\s*,\\s*")));
+        Set<String> current = new HashSet<>(Arrays.asList((saved != null ? saved : themeVpnApp).split("\\s*,\\s*")));
         CharSequence[] labels = new CharSequence[apps.size()];
         boolean[] on = new boolean[apps.size()];
         for (int i = 0; i < labels.length; i++) {
