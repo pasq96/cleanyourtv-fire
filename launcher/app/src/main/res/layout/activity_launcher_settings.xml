@@ -137,29 +137,10 @@
                 </LinearLayout>
             </LinearLayout>
             <LinearLayout
-                style="@style/SettingsBlock"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
-                    <TextView
-                        style="@style/SettingsLabel"
-                        android:text="@string/dock_height" />
-                    <TextView
-                        style="@style/SettingsNote"
-                        android:text="@string/d_dock_height" />
-                </LinearLayout>
-                <LinearLayout
-                    style="@style/SettingsSegments">
-                    <TextView android:id="@+id/lift0" style="@style/SettingsSeg" android:text="0" />
-                    <TextView android:id="@+id/lift1" style="@style/SettingsSeg" android:text="1" />
-                    <TextView android:id="@+id/lift2" style="@style/SettingsSeg" android:text="2" />
-                    <TextView android:id="@+id/lift3" style="@style/SettingsSeg" android:text="3" />
-                </LinearLayout>
-            </LinearLayout>
+                android:id="@+id/segLift"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
         </LinearLayout>
         <TextView
             style="@style/SettingsSection"

@@ -218,7 +218,7 @@
     <string name="opt_inputs">Inputs button</string>
     <string name="d_reorder">Move apps around the grid.</string>
     <string name="dock_height">Dock height</string>
-    <string name="d_dock_height">Reduces the gap under the top buttons.</string>
+    <string name="d_dock_height">Higher raises the dock and closes the gap under the top buttons.</string>
     <string name="lang_state">Language: %1$s</string>
     <string name="lang_system">System</string>
     <string name="lang_en">English</string>
@@ -266,4 +266,10 @@
     <string name="lbl_sort">App order</string>
     <string name="lbl_units">Temperature</string>
     <string name="lbl_lang">Language</string>
+    <string name="dock_position">Dock position</string>
+    <string name="dock_pos_0">Lowest</string>
+    <string name="dock_pos_1">Low</string>
+    <string name="dock_pos_2">Medium</string>
+    <string name="dock_pos_3">High</string>
+    <string name="dock_pos_4">Highest</string>
 </resources>

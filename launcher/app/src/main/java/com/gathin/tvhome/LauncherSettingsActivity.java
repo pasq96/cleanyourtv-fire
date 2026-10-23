@@ -36,7 +36,6 @@ public final class LauncherSettingsActivity extends Activity {
     private TextView followThemeChoice;
     private TextView themeChoice;
     private TextView vpnChoice, wifiNameChoice;
-    private final TextView[] liftChoices = new TextView[4];
     private final List<Runnable> toggleRefreshers = new ArrayList<>();
     private int columns;
     private int rowsBelowDock;
@@ -112,7 +111,6 @@ public final class LauncherSettingsActivity extends Activity {
             reverseRow(columnChoices);
             reverseRow(rowChoices);
             reverseRow(dockChoices);
-            reverseRow(liftChoices);
         }
         wallpaperChoice = findViewById(R.id.wallpaperChoice);
         wallpaperChoice.setOnClickListener(v -> showWallpaperPicker());
@@ -132,16 +130,6 @@ public final class LauncherSettingsActivity extends Activity {
                     changed();
                     recreate();
                 }));
-        int[] liftIds = {R.id.lift0, R.id.lift1, R.id.lift2, R.id.lift3};
-        for (int i = 0; i < liftIds.length; i++) {
-            final int value = i;
-            liftChoices[i] = findViewById(liftIds[i]);
-            liftChoices[i].setOnClickListener(v -> {
-                choices.edit().putInt("dock_lift", value).apply();
-                changed();
-                refresh();
-            });
-        }
         findViewById(R.id.weatherKeyChoice).setOnClickListener(v -> askText(Weather.KEY_API, R.string.weather_key));
         findViewById(R.id.weatherCityChoice).setOnClickListener(v -> askText(Weather.KEY_CITY, R.string.weather_city));
         wifiNameChoice = findViewById(R.id.wifiNameChoice);
@@ -168,6 +156,9 @@ public final class LauncherSettingsActivity extends Activity {
         addToggle(buttons, "show_network_pill", R.string.opt_wifi, 0, config.showNetworkPill);
         addToggle(buttons, Pills.SHOW_POWER_KEY, R.string.opt_power, 0, true);
         addPillStyles((LinearLayout) findViewById(R.id.pillsContainer), config);
+        addSegmented(findViewById(R.id.segLift), R.string.dock_position, R.string.d_dock_height,
+                new int[]{R.string.dock_pos_0, R.string.dock_pos_1, R.string.dock_pos_2, R.string.dock_pos_3, R.string.dock_pos_4},
+                () -> Math.min(4, choices.getInt("dock_lift", 1)), i -> choices.edit().putInt("dock_lift", i).apply());
         addSegmented(findViewById(R.id.segBanner), R.string.lbl_banner, R.string.d_banner,
                 new int[]{R.string.banner_off, R.string.banner_stretch, R.string.banner_gradient},
                 () -> Themes.bannerStyle(this), i -> choices.edit().putInt(Themes.BANNER_STYLE_KEY, i).apply());
@@ -353,7 +344,6 @@ public final class LauncherSettingsActivity extends Activity {
         wifiNameChoice.setText(getString(R.string.wifi_name_state,
                 getString(!locationGranted() ? R.string.wifi_name_ask : !WifiName.locationOn(this) ? R.string.wifi_name_off
                         : WifiName.read(this) != null ? R.string.wifi_name_ok : R.string.wifi_name_hidden)));
-        for (int i = 0; i < liftChoices.length; i++) liftChoices[i].setSelected(choices.getInt("dock_lift", 1) == i);
         for (Runnable r : toggleRefreshers) r.run();
         String vpns = choices.getString(Config.VPN_APP_KEY, null);
         if (vpns == null) vpns = themeVpnApp;
