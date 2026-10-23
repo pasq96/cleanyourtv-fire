@@ -2370,8 +2370,6 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
 
     private void showWeather(Weather.Now now) {
         weatherRow.setVisibility(now == null ? View.GONE : View.VISIBLE);
-        View divider = findViewById(R.id.clockDivider);
-        if (divider != null) divider.setVisibility(now == null && !shamsi ? View.GONE : View.VISIBLE);
         if (now == null) return;
         ((TextView) findViewById(R.id.weatherText)).setText(now.city + "  ·  " + now.temp + "°");
         ((ImageView) findViewById(R.id.weatherIcon)).setImageResource(Weather.icon(now.id, now.night));

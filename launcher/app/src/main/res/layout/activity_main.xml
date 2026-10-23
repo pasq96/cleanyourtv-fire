@@ -182,29 +182,11 @@
                     android:layout_height="wrap_content"
                     android:singleLine="true"
                     android:ellipsize="end"
-                    android:layout_marginStart="-4dp"
+                    android:layout_marginStart="4dp"
                     android:textColor="#8CFFFFFF"
                     android:textSize="12sp"
                     android:fontFamily="@string/font_medium"
                     android:letterSpacing="0.22"
-                    android:textAllCaps="true" />
-
-                <TextClock
-                    android:id="@+id/date"
-                    android:gravity="left"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:singleLine="true"
-                    android:ellipsize="end"
-                    android:layout_marginStart="-4dp"
-                    android:layout_marginTop="3dp"
-                    android:layout_marginBottom="2dp"
-                    android:format12Hour="@string/date_format_home"
-                    android:format24Hour="@string/date_format_home"
-                    android:textColor="#B3FFFFFF"
-                    android:textSize="14sp"
-                    android:fontFamily="@string/font_regular"
-                    android:letterSpacing="0.14"
                     android:textAllCaps="true" />
 
                 <LinearLayout
@@ -241,8 +223,6 @@
                         android:textAllCaps="true" />
 
                     <View
-                        android:id="@+id/clockDivider"
-                        android:visibility="gone"
                         android:layout_width="1dp"
                         android:layout_height="26dp"
                         android:layout_gravity="bottom"
@@ -259,6 +239,21 @@
                         android:layout_marginBottom="9dp"
                         android:orientation="vertical">
 
+                        <TextClock
+                            android:id="@+id/date"
+                            android:gravity="left"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:singleLine="true"
+                            android:ellipsize="end"
+                            android:format12Hour="@string/date_format_home"
+                            android:format24Hour="@string/date_format_home"
+                            android:textColor="#A6FFFFFF"
+                            android:textSize="14sp"
+                            android:fontFamily="@string/font_regular"
+                            android:letterSpacing="0.14"
+                            android:textAllCaps="true" />
+
                         <!-- Shamsi date ("27 Mehr 1405"), shown when shamsi_date is on. -->
                         <TextView
                             android:id="@+id/shamsiDate"
@@ -274,7 +269,7 @@
                             android:includeFontPadding="false"
                             android:visibility="gone" />
 
-                        <!-- OpenWeather reading: place, degrees and a condition icon; gone until the key and place are set. -->
+                        <!-- Second line: OpenWeather reading (place, degrees, icon); gone until the key and place are set. -->
                         <LinearLayout
                             android:id="@+id/weatherRow"
                             android:layout_width="wrap_content"
