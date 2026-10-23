@@ -232,7 +232,7 @@
     <string name="weather_key">OpenWeather API key</string>
     <string name="weather_city">Place (e.g. Napoli,IT)</string>
     <string name="d_weather_key">Free key from openweathermap.org. Shows the weather beside the clock.</string>
-    <string name="d_weather_city">City, optionally with country code.</string>
+    <string name="d_weather_city">Place, optionally with country code. Text in brackets is only shown: Poggiomarino (NA),IT.</string>
     <string name="sec_grid">Grid</string>
     <string name="d_wifi_name">Android shows the network name only with the location permission.</string>
     <string name="wifi_name_state">Network name on the Wi-Fi button: %1$s</string>

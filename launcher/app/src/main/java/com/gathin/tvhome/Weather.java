@@ -38,6 +38,26 @@ final class Weather {
 
     private Weather() {}
 
+    /** The place as typed may end in a tag such as "Poggiomarino (NA),IT": the tag is shown, not searched. */
+    static String suffix(String place) {
+        java.util.regex.Matcher m = java.util.regex.Pattern.compile("\\s*(\\([^)]*\\))").matcher(place);
+        return m.find() ? " " + m.group(1) : "";
+    }
+
+    static String query(String place) {
+        return place.replaceAll("\\s*\\([^)]*\\)", "");
+    }
+
+    /** "Comune di Poggiomarino" reads as "Poggiomarino". */
+    static String shortName(String name) {
+        return name.replaceFirst("(?i)^(comune di|municipality of|city of)\\s+", "").trim();
+    }
+
+    private static String tidy(String city, String place) {
+        city = shortName(city);
+        return city.contains("(") ? city : city + suffix(place);
+    }
+
     /** Fahrenheit when the choice says so; Celsius otherwise. */
     static boolean fahrenheit(SharedPreferences p) {
         return "f".equals(p.getString(KEY_UNITS, "c"));
@@ -58,7 +78,7 @@ final class Weather {
         if (!c.contains("temp")) return null;
         String place = prefs(ctx).getString(KEY_CITY, "").trim();
         if (!place.equals(c.getString("place", ""))) return null;   // the place was changed since
-        return new Now(c.getString("city", place), c.getInt("temp", 0), c.getInt("id", 800), c.getBoolean("night", false),
+        return new Now(tidy(c.getString("city", place), place), c.getInt("temp", 0), c.getInt("id", 800), c.getBoolean("night", false),
                 c.getLong("at", 0));
     }
 
@@ -70,12 +90,12 @@ final class Weather {
     static void fetch(Context ctx, Listener listener) {
         final Context app = ctx.getApplicationContext();
         final SharedPreferences p = prefs(app);
-        final String key = p.getString(KEY_API, "").trim(), place = p.getString(KEY_CITY, "").trim();
+        final String key = p.getString(KEY_API, "").trim(), place = p.getString(KEY_CITY, "").trim(), query = query(place);
         final String lang = Lang.chosen(app).equals("system") ? java.util.Locale.getDefault().getLanguage() : Lang.chosen(app);
         new Thread(() -> {
             HttpURLConnection conn = null;
             try {
-                URL url = new URL("https://api.openweathermap.org/data/2.5/weather?q=" + URLEncoder.encode(place, "UTF-8")
+                URL url = new URL("https://api.openweathermap.org/data/2.5/weather?q=" + URLEncoder.encode(query, "UTF-8")
                         + "&units=" + (fahrenheit(p) ? "imperial" : "metric") + "&lang=" + URLEncoder.encode(lang, "UTF-8") + "&appid=" + URLEncoder.encode(key, "UTF-8"));
                 conn = (HttpURLConnection) url.openConnection();
                 conn.setConnectTimeout(8000);
@@ -90,7 +110,7 @@ final class Weather {
                     json = new JSONObject(new String(out.toByteArray(), StandardCharsets.UTF_8));
                 }
                 JSONObject w = json.getJSONArray("weather").getJSONObject(0);
-                Now now = new Now(json.optString("name", place), (int) Math.round(json.getJSONObject("main").getDouble("temp")),
+                Now now = new Now(shortName(json.optString("name", query)) + suffix(place), (int) Math.round(json.getJSONObject("main").getDouble("temp")),
                         w.optInt("id", 800), w.optString("icon", "").endsWith("n"), System.currentTimeMillis());
                 app.getSharedPreferences(CACHE, Context.MODE_PRIVATE).edit().putString("place", place).putString("city", now.city)
                         .putInt("temp", now.temp).putInt("id", now.id).putBoolean("night", now.night).putLong("at", now.at).apply();

@@ -239,6 +239,35 @@
                         android:layout_marginBottom="9dp"
                         android:orientation="vertical">
 
+                        <!-- First line: OpenWeather reading (place, degrees, icon); gone until the key and place are set. -->
+                        <LinearLayout
+                            android:id="@+id/weatherRow"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal"
+                            android:visibility="gone">
+
+                            <TextView
+                                android:id="@+id/weatherText"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:singleLine="true"
+                                android:ellipsize="end"
+                                android:textColor="#E6FFFFFF"
+                                android:textSize="17sp"
+                                android:fontFamily="@string/font_regular"
+                                android:letterSpacing="0.02"
+                                android:includeFontPadding="false" />
+
+                            <ImageView
+                                android:id="@+id/weatherIcon"
+                                android:layout_width="26dp"
+                                android:layout_height="26dp"
+                                android:layout_marginStart="8dp"
+                                android:importantForAccessibility="no" />
+                        </LinearLayout>
+
                         <TextClock
                             android:id="@+id/date"
                             android:gravity="left"
@@ -268,35 +297,6 @@
                             android:letterSpacing="0.02"
                             android:includeFontPadding="false"
                             android:visibility="gone" />
-
-                        <!-- Second line: OpenWeather reading (place, degrees, icon); gone until the key and place are set. -->
-                        <LinearLayout
-                            android:id="@+id/weatherRow"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:gravity="center_vertical"
-                            android:orientation="horizontal"
-                            android:visibility="gone">
-
-                            <TextView
-                                android:id="@+id/weatherText"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:singleLine="true"
-                                android:ellipsize="end"
-                                android:textColor="#E6FFFFFF"
-                                android:textSize="17sp"
-                                android:fontFamily="@string/font_regular"
-                                android:letterSpacing="0.02"
-                                android:includeFontPadding="false" />
-
-                            <ImageView
-                                android:id="@+id/weatherIcon"
-                                android:layout_width="26dp"
-                                android:layout_height="26dp"
-                                android:layout_marginStart="8dp"
-                                android:importantForAccessibility="no" />
-                        </LinearLayout>
                     </LinearLayout>
                 </LinearLayout>
 

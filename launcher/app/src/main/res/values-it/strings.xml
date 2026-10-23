@@ -186,7 +186,7 @@
     <string name="weather_key">Chiave API OpenWeather</string>
     <string name="weather_city">Località (es. Napoli,IT)</string>
     <string name="d_weather_key">Chiave gratuita da openweathermap.org. Mostra il meteo accanto all\'orologio.</string>
-    <string name="d_weather_city">Città, con il codice paese se serve.</string>
+    <string name="d_weather_city">Città con codice paese. Il testo tra parentesi è solo mostrato: Poggiomarino (NA),IT.</string>
     <string name="sec_grid">Griglia</string>
     <string name="d_wifi_name">Android mostra il nome della rete solo con il permesso di posizione.</string>
     <string name="wifi_name_state">Nome della rete sul pulsante Wi-Fi: %1$s</string>

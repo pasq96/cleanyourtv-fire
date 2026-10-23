@@ -244,6 +244,9 @@
                 <TextView
                     android:id="@+id/weatherCityChoice"
                     style="@style/SettingsRow" />
+                <TextView
+                    style="@style/SettingsNote"
+                    android:text="@string/d_weather_city" />
             </LinearLayout>
             <LinearLayout
                 style="@style/SettingsBlock">
