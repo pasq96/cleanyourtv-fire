@@ -340,7 +340,8 @@ final class Config {
         List<String> appKeys = new ArrayList<>(Arrays.asList(res.getStringArray(R.array.app_keys)));
         String stockHomeRedirect = res.getString(R.string.stock_home_redirect).trim();
         // Fire OS: Amazon's home can't be replaced, only covered, and a force stop would end that for good.
-        if (FireOs.is(ctx)) {
+        boolean fireOs = FireOs.is(ctx);
+        if (fireOs) {
             if (stockHomeRedirect.isEmpty()) stockHomeRedirect = FireOs.LAUNCHER;
             restoreKeyServices = true;
         }
@@ -467,6 +468,8 @@ final class Config {
         Festival festival = json == null ? Festival.NONE : Festival.parse(string(json, "festival", ""),
                 string(json, "festival_until", ""), string(json, "greeting", ""), string(json, "accent_color", ""));
 
+        // After the theme: its hidden_apps replaces the list, these Amazon entries stay hidden on Fire OS.
+        if (fireOs) for (String pkg : FireOs.HIDDEN) if (!hidden.contains(pkg)) hidden.add(pkg);
         return new Config(dock, fillDock, hidden, libraryApps, liveTv, liveTvAction, liveTvInputId, packageMap(launchActions), packageMap(appLabels),
                 packageMap(appBanners), panelService,
                 panelAction, panelExtra, coocaaSources, inputAction, inputUriScheme,

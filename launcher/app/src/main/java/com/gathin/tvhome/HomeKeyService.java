@@ -56,7 +56,7 @@ public class HomeKeyService extends AccessibilityService {
     private final Set<String> stockHome = new HashSet<>();
     /** Fire OS: only the home screen is redirected, and not while Settings is opening (FireOs). */
     private boolean fire;
-    private long lastRedirect;
+    private final FireOs.Guard guard = new FireOs.Guard();
 
     @Override
     protected void onServiceConnected() {
@@ -186,8 +186,10 @@ public class HomeKeyService extends AccessibilityService {
         CharSequence cls = event.getClassName();
         if (cls == null || !stockHome.contains(cls.toString())) return;
         long now = SystemClock.uptimeMillis();
-        if (fire && (FireOs.settingsQuiet(now) || now - lastRedirect < FireOs.DEBOUNCE_MS)) return;
-        lastRedirect = now;
+        if (fire && (FireOs.settingsQuiet(now) || !guard.allow(now))) {
+            if (guard.paused(now)) android.util.Log.w("HomeKeyService", "Home redirect paused: launcher not staying up");
+            return;
+        }
         try {
             // No transition: Amazon's home is on screen for as short as possible.
             startActivity(new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME).setPackage(getPackageName())

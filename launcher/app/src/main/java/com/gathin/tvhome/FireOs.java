@@ -19,6 +19,12 @@ final class FireOs {
     static final long SETTINGS_QUIET_MS = 10_000;
     /** One redirect per Home press: Amazon's home can report several window changes while it comes up. */
     static final long DEBOUNCE_MS = 600;
+    /** LOOP_MAX redirects within LOOP_WINDOW_MS: this launcher isn't staying up (crash, OOM), so Amazon's home is
+     *  left alone for LOOP_BACKOFF_MS instead of flickering between the two. */
+    static final int LOOP_MAX = 4;
+    static final long LOOP_WINDOW_MS = 8_000, LOOP_BACKOFF_MS = 60_000;
+    /** Amazon entries that would only show as tiles of the home being covered, or of Settings (Gear button). */
+    static final String[] HIDDEN = {LAUNCHER, "com.amazon.tv.settings.v2"};
 
     private static volatile long settingsOpenedAt = -SETTINGS_QUIET_MS;
 
@@ -53,5 +59,29 @@ final class FireOs {
 
     static boolean settingsQuiet(long now) {
         return now - settingsOpenedAt < SETTINGS_QUIET_MS;
+    }
+
+    /** Debounce plus loop back-off for the redirect; one per service, so no locking. */
+    static final class Guard {
+        private final long[] recent = new long[LOOP_MAX];
+        private int count;
+        private long last = -DEBOUNCE_MS, pausedUntil;
+
+        boolean allow(long now) {
+            if (now < pausedUntil || now - last < DEBOUNCE_MS) return false;
+            int slot = count % LOOP_MAX;
+            if (count >= LOOP_MAX && now - recent[slot] < LOOP_WINDOW_MS) {
+                pausedUntil = now + LOOP_BACKOFF_MS;
+                count = 0;
+                return false;
+            }
+            recent[slot] = last = now;
+            count++;
+            return true;
+        }
+
+        boolean paused(long now) {
+            return now < pausedUntil;
+        }
     }
 }

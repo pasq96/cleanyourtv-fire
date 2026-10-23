@@ -3,20 +3,22 @@
 # Amazon's launcher stays enabled and the system home (Fire OS protects it); HomeKeyService covers its
 # home window, Settings keeps working. Nothing is disabled or uninstalled.
 #
-#   FIRE_HOST=192.168.1.50 ./fire-install.sh              build, install, enable the redirect
-#   FIRE_HOST=... ./fire-install.sh --theme ../themes/x   same, then push x/config.json (dock, vpn_app, ...)
+#   FIRE_HOST=192.168.1.50 ./fire-install.sh              build, install, enable the redirect, push fire-theme/
+#   FIRE_HOST=... ./fire-install.sh --theme ../themes/x   push x/config.json (dock, vpn_app, ...) instead
+#   FIRE_HOST=... ./fire-install.sh --no-theme            keep the theme already on the TV
 #   FIRE_HOST=... ./fire-install.sh --apk app-release.apk install a prebuilt APK, no build
 #   FIRE_HOST=... ./fire-install.sh --release owner/repo  install the latest release APK (fire-apk.yml)
 #   FIRE_HOST=... ./fire-install.sh --restore             redirect off, launcher uninstalled, Amazon home back
 # FIRE_HOST unset: uses the single device adb already sees (USB or an earlier adb connect).
 set -euo pipefail
+ORIG=$PWD
 cd "$(dirname "$0")"
+abs() { case "$1" in /*) echo "$1" ;; *) echo "$ORIG/$1" ;; esac; }   # paths given relative to the caller
 PKG=com.gathin.tvhome
 SVC=$PKG/.HomeKeyService
 DIR=/sdcard/Android/data/$PKG/files
 APK=app/build/outputs/apk/release/app-release.apk
-THEME="" BUILD=1 MODE=install REPO=""
-
+THEME=fire-theme BUILD=1 MODE=install REPO=""
 
 log() { printf '%s %s fire-install.sh.%s:%s: %s\n' "$(date +'%y/%m/%d %H:%M:%S')" "$1" "${FUNCNAME[1]:-main}" "${BASH_LINENO[0]}" "$2"; }
 die() { log ERROR "$1"; exit 1; }
@@ -24,8 +26,9 @@ sh_() { adb shell "$@" | tr -d '\r'; }
 
 while [ $# -gt 0 ]; do
   case "$1" in
-    --theme) THEME="${2:?--theme needs a folder}"; shift 2 ;;
-    --apk) APK="${2:?--apk needs a file}"; BUILD=0; shift 2 ;;
+    --theme) THEME="$(abs "${2:?--theme needs a folder}")"; shift 2 ;;
+    --no-theme) THEME=""; shift ;;
+    --apk) APK="$(abs "${2:?--apk needs a file}")"; BUILD=0; shift 2 ;;
     --release) REPO="${2:?--release needs owner/repo}"; BUILD=2; shift 2 ;;
     --restore) MODE=restore; shift ;;
     *) die "unknown option $1" ;;
@@ -84,14 +87,16 @@ install() {
   if [ "$BUILD" = 1 ]; then
     [ -f local.properties ] || [ -z "${ANDROID_HOME:-}" ] || echo "sdk.dir=$ANDROID_HOME" > local.properties
     log INFO "building release APK"
-    ./gradlew assembleRelease -q --console=plain
+    # Local and incremental: build cache, parallel, configuration cache, a warm daemon for the next run.
+    ./gradlew assembleRelease -q --console=plain --build-cache --parallel --configuration-cache \
+      -Dorg.gradle.configuration-cache.problems=warn
   elif [ "$BUILD" = 2 ]; then
     APK="$(mktemp -d)/cleanyourtv-fire.apk"
     log INFO "downloading latest release of $REPO"
     if command -v gh >/dev/null && gh auth status >/dev/null 2>&1; then
-      gh release download -R "$REPO" -p cleanyourtv-fire.apk -O "$APK" || die "no release APK in $REPO"
+      gh release download latest -R "$REPO" -p cleanyourtv-fire.apk -O "$APK" || die "no release APK in $REPO"
     else
-      curl -fsSL -o "$APK" "https://github.com/$REPO/releases/latest/download/cleanyourtv-fire.apk" \
+      curl -fsSL -o "$APK" "https://github.com/$REPO/releases/download/latest/cleanyourtv-fire.apk" \
         || die "download failed (private repo: install and log in to gh)"
     fi
   fi
