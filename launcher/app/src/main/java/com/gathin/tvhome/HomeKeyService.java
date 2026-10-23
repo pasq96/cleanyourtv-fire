@@ -58,9 +58,18 @@ public class HomeKeyService extends AccessibilityService {
     private boolean fire;
     private final FireOs.Guard guard = new FireOs.Guard();
 
+    /** The running service, for PowerActions; null while it is off. */
+    private static volatile HomeKeyService live;
+
+    static boolean global(int action) {
+        HomeKeyService s = live;
+        return s != null && s.performGlobalAction(action);
+    }
+
     @Override
     protected void onServiceConnected() {
         super.onServiceConnected();
+        live = this;
         settingsScancodes = getResources().getIntArray(R.array.settings_key_scancodes);
         // The service is directBootAware: Android 11 skips a service that is not while the user is still
         // locked at boot, writes accessibility_enabled=0 and, on TCL G03 firmware, never binds it after the
@@ -93,6 +102,7 @@ public class HomeKeyService extends AccessibilityService {
 
     @Override
     public void onDestroy() {
+        if (live == this) live = null;
         stopWaitingForUnlock();
         super.onDestroy();
     }
@@ -175,6 +185,7 @@ public class HomeKeyService extends AccessibilityService {
     /** Unbound by Android: the user turned the helper off, so Home doesn't put it back (ServiceRepair). */
     @Override
     public boolean onUnbind(Intent intent) {
+        if (live == this) live = null;
         if (repairRecord) ServiceRepair.disconnected(this, getClass());
         return super.onUnbind(intent);
     }

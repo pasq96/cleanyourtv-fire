@@ -247,7 +247,8 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     /** Reorder started for one tile (hold OK, tile menu): ends as soon as it is put down. */
     private boolean singleMove;
     private View weatherRow;
-    private TextView btnVpn, btnLauncher;
+    private TextView btnVpn, btnLauncher, btnPower;
+    private boolean vpnCompact;
     private boolean showNetworkPill = true;
     /** Reorder mode is on (top-bar button). */
     private boolean reordering;
@@ -636,7 +637,9 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         btnLibraryTop.setVisibility(cfg.libraryButton && cfg.appLibrary ? View.VISIBLE : View.GONE);
         iconOnlyButtons = cfg.iconOnlyButtons;
         topMenu = cfg.topMenu;
-        wifiIconOnly = iconOnlyButtons && cfg.wifiLabelWidth <= 0;
+        final SharedPreferences pillChoices = getSharedPreferences(Config.SETTINGS_NAME, MODE_PRIVATE);
+        final boolean wifiCompact = Pills.compact(pillChoices, cfg, "wifi");
+        wifiIconOnly = wifiCompact && (cfg.wifiLabelWidth <= 0 || pillChoices.contains("pill_style_wifi"));
         if (cfg.topMenu) {
             // One gear: Inputs and Wi-Fi move into its dropdown. The Wi-Fi pill stays hidden but keeps its
             // label up to date, which the menu's Wi-Fi row shows.
@@ -655,12 +658,22 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             topButtons.setLayoutParams(tlp);
             topButtons.setGravity(Gravity.CENTER_VERTICAL);
         }
-        if (iconOnlyButtons) {
-            if (cfg.wifiLabelWidth > 0) btnWifi.setMaxWidth(Math.round(cfg.wifiLabelWidth * density));
+        if (wifiCompact) {
+            if (cfg.wifiLabelWidth > 0 && !wifiIconOnly) btnWifi.setMaxWidth(Math.round(cfg.wifiLabelWidth * density));
             else makeIconOnly(btnWifi);
-            makeIconOnly((TextView) btnSettings);
         }
-        if (cfg.iconOnlyInputs) makeIconOnly((TextView) btnInputs);
+        if (cfg.topMenu ? iconOnlyButtons : Pills.compact(pillChoices, cfg, "settings")) makeIconOnly((TextView) btnSettings);
+        if (Pills.compact(pillChoices, cfg, "inputs")) makeIconOnly((TextView) btnInputs);
+        if (Pills.compact(pillChoices, cfg, "launcher")) makeIconOnly(btnLauncher);
+        vpnCompact = Pills.compact(pillChoices, cfg, "vpn");
+        if (vpnCompact) {
+            makeIconOnly(btnVpn);
+            btnVpn.setCompoundDrawablesRelativeWithIntrinsicBounds(R.drawable.ic_vpn, 0, 0, 0);
+        }
+        btnPower = findViewById(R.id.btnPower);
+        btnPower.setOnClickListener(v -> showPowerMenu(btnPower));
+        btnPower.setVisibility(pillChoices.getBoolean(Pills.SHOW_POWER_KEY, true) && !cfg.topMenu ? View.VISIBLE : View.GONE);
+        if (Pills.compact(pillChoices, cfg, "power")) makeIconOnly(btnPower);
         btnSettings.setOnLongClickListener(v -> {
             showSettingsMenu();
             return true;
@@ -687,11 +700,12 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         btnWifi.setOnKeyListener(pillKeys);
         btnVpn.setOnKeyListener(pillKeys);
         btnLauncher.setOnKeyListener(pillKeys);
+        btnPower.setOnKeyListener(pillKeys);
         btnSettings.setOnKeyListener(pillKeys);
         btnReorder.setOnKeyListener(pillKeys);
         btnLibraryTop.setOnKeyListener(pillKeys);
         if (advancedEffects) {
-            for (View button : new View[]{btnInputs, btnWifi, btnVpn, btnLauncher, btnReorder, btnLibraryTop, btnSettings}) {
+            for (View button : new View[]{btnInputs, btnWifi, btnVpn, btnLauncher, btnPower, btnReorder, btnLibraryTop, btnSettings}) {
                 button.setOnFocusChangeListener((view, focused) -> view.animate()
                         .scaleX(focused ? 1.04f : 1f).scaleY(focused ? 1.04f : 1f)
                         .setDuration(reducedMotion ? Motion.REDUCED_MS : 160).start());
@@ -2446,9 +2460,11 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             if (!show && btnVpn.hasFocus()) btnWifi.requestFocus();
             btnVpn.setVisibility(show ? View.VISIBLE : View.GONE);
             if (show) {
-                btnVpn.setText(vpn ? R.string.vpn_pill_on : R.string.vpn_pill_off);
+                if (vpnCompact) btnVpn.setContentDescription(getString(vpn ? R.string.vpn_pill_on : R.string.vpn_pill_off));
+                else btnVpn.setText(vpn ? R.string.vpn_pill_on : R.string.vpn_pill_off);
                 btnVpn.setBackgroundResource(vpn ? R.drawable.pill_vpn_on : R.drawable.pill_vpn_off);
                 btnVpn.setTextColor(getColorStateList(vpn ? R.color.pill_vpn_on_text : R.color.pill_vpn_off_text));
+                if (vpnCompact) btnVpn.setCompoundDrawableTintList(getColorStateList(vpn ? R.color.pill_vpn_on_text : R.color.pill_vpn_off_text));
             }
         }
         if (wifiIconOnly) {
@@ -2957,6 +2973,38 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
 
     // ---- launcher settings and module cards -------------------------------------------------------
 
+    /** Power pill: off or restart, each asking for a confirmation in a second glass panel. */
+    private void showPowerMenu(View anchor) {
+        View panel = getLayoutInflater().inflate(R.layout.popup_inputs, root, false);
+        LinearLayout rows = panel.findViewById(R.id.rows);
+        PopupWindow popup = glassPopup(panel, (int) (240 * density));
+        addInputRow(rows, popup, R.drawable.ic_power, getString(R.string.power_off), -1, () -> root.post(() -> confirmPower(anchor, false)));
+        addInputRow(rows, popup, R.drawable.ic_restart, getString(R.string.power_restart), -1, () -> root.post(() -> confirmPower(anchor, true)));
+        dropIn(popup, panel, anchor, getResources().getBoolean(R.bool.rtl_menu_bar) ? Gravity.START : Gravity.END);
+        rows.getChildAt(0).requestFocus();
+    }
+
+    private void confirmPower(View anchor, boolean restart) {
+        View panel = getLayoutInflater().inflate(R.layout.popup_inputs, root, false);
+        LinearLayout rows = panel.findViewById(R.id.rows);
+        PopupWindow popup = glassPopup(panel, (int) (280 * density));
+        TextView ask = new TextView(this);
+        ask.setText(restart ? R.string.power_ask_restart : R.string.power_ask_off);
+        ask.setTextColor(0xFFFFFFFF);
+        ask.setTextSize(16);
+        int pad = (int) (14 * density);
+        ask.setPadding(pad, pad, pad, (int) (8 * density));
+        rows.addView(ask);
+        addInputRow(rows, popup, restart ? R.drawable.ic_restart : R.drawable.ic_power, getString(R.string.power_confirm), -1, () -> {
+            boolean done = restart ? PowerActions.restart(this) : PowerActions.off(this);
+            Toast.makeText(this, done ? (restart ? R.string.power_restarting : R.string.power_going_off)
+                    : R.string.power_unavailable, Toast.LENGTH_LONG).show();
+        });
+        addInputRow(rows, popup, R.drawable.ic_close, getString(android.R.string.cancel), -1, () -> { });
+        dropIn(popup, panel, anchor, getResources().getBoolean(R.bool.rtl_menu_bar) ? Gravity.START : Gravity.END);
+        rows.getChildAt(rows.getChildCount() - 1).requestFocus();
+    }
+
     /** top_menu: the gear's dropdown, standing in for the Inputs, Wi-Fi and Settings pills. */
     private void showTopMenu() {
         View anchor = findViewById(R.id.btnSettings);
@@ -2978,6 +3026,9 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         } else {
             addInputRow(rows, popup, R.drawable.ic_settings, getString(R.string.settings), -1,
                     () -> open(systemIntent(Settings.ACTION_SETTINGS)));
+        }
+        if (getSharedPreferences(Config.SETTINGS_NAME, MODE_PRIVATE).getBoolean(Pills.SHOW_POWER_KEY, true)) {
+            addInputRow(rows, popup, R.drawable.ic_power, getString(R.string.pill_power), -1, () -> root.post(() -> showPowerMenu(anchor)));
         }
         panel.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
         popup.setWidth(Math.max((int) (220 * density), Math.min(panel.getMeasuredWidth(), (int) (360 * density))));

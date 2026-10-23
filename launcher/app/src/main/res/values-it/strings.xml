@@ -197,4 +197,23 @@
     <string name="weather_units_state">Temperatura: %1$s</string>
     <string name="weather_celsius">Celsius</string>
     <string name="weather_fahrenheit">Fahrenheit</string>
+    <string name="sec_pills">Pillole in alto</string>
+    <string name="pill_inputs">Ingressi</string>
+    <string name="pill_wifi">Wi-Fi</string>
+    <string name="pill_vpn">VPN</string>
+    <string name="pill_launcher">Launcher</string>
+    <string name="pill_settings">Impostazioni</string>
+    <string name="pill_power">Alimentazione</string>
+    <string name="pill_full">Icona e testo</string>
+    <string name="pill_compact">Solo icona</string>
+    <string name="pill_state">%1$s: %2$s</string>
+    <string name="opt_power">Pillola alimentazione</string>
+    <string name="power_off">Spegni</string>
+    <string name="power_restart">Riavvia</string>
+    <string name="power_ask_off">Spegnere la Fire TV?</string>
+    <string name="power_ask_restart">Riavviare la Fire TV?</string>
+    <string name="power_confirm">Conferma</string>
+    <string name="power_going_off">Vado in standby</string>
+    <string name="power_restarting">Riavvio in corso</string>
+    <string name="power_unavailable">Questa Fire TV non permette alle app di farlo. Attiva il servizio di accessibilità del launcher oppure usa il telecomando.</string>
 </resources>

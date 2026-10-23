@@ -209,6 +209,8 @@ public final class LauncherSettingsActivity extends Activity {
         LinearLayout buttons = findViewById(R.id.buttonsContainer);
         addToggle(buttons, "show_inputs_pill", R.string.opt_inputs, 0, config.showInputsPill);
         addToggle(buttons, "show_network_pill", R.string.opt_wifi, 0, config.showNetworkPill);
+        addToggle(buttons, Pills.SHOW_POWER_KEY, R.string.opt_power, 0, true);
+        addPillStyles((LinearLayout) findViewById(R.id.pillsContainer), config);
         sortChoice = findViewById(R.id.sortChoice);
         sortChoice.setOnClickListener(v -> {
             choices.edit().putBoolean(Themes.SORT_RECENT_KEY, !Themes.sortRecent(this)).apply();
@@ -417,6 +419,38 @@ public final class LauncherSettingsActivity extends Activity {
                     refresh();
                 })
                 .setNegativeButton(android.R.string.cancel, null).show();
+    }
+
+    /** One row per top pill: tap to switch it between icon with label and icon only, independently of the others. */
+    private void addPillStyles(LinearLayout parent, Config config) {
+        int[] names = {R.string.pill_inputs, R.string.pill_wifi, R.string.pill_vpn, R.string.pill_launcher,
+                R.string.pill_settings, R.string.pill_power};
+        float d = getResources().getDisplayMetrics().density;
+        for (int i = 0; i < Pills.IDS.length; i++) {
+            final String id = Pills.IDS[i];
+            final int name = names[i];
+            TextView row = new TextView(this);
+            row.setFocusable(true);
+            row.setClickable(true);
+            row.setBackgroundResource(R.drawable.settings_choice_bg);
+            row.setTextColor(getResources().getColorStateList(R.drawable.pill_text, getTheme()));
+            row.setTextSize(18);
+            row.setGravity(android.view.Gravity.CENTER_VERTICAL);
+            row.setPadding((int) (20 * d), 0, (int) (20 * d), 0);
+            row.setMinHeight((int) (52 * d));
+            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            lp.topMargin = (int) (12 * d);
+            Runnable show = () -> row.setText(getString(R.string.pill_state, getString(name),
+                    getString(Pills.compact(choices, config, id) ? R.string.pill_compact : R.string.pill_full)));
+            row.setOnClickListener(v -> {
+                Pills.set(choices, id, !Pills.compact(choices, config, id));
+                changed();
+                show.run();
+            });
+            toggleRefreshers.add(show);
+            parent.addView(row, lp);
+            show.run();
+        }
     }
 
     /** An on/off row saved as a boolean choice that Config reads under the same key; desc 0 means no note. */

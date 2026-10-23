@@ -243,4 +243,23 @@
     <string name="weather_units_state">Temperature: %1$s</string>
     <string name="weather_celsius">Celsius</string>
     <string name="weather_fahrenheit">Fahrenheit</string>
+    <string name="sec_pills">Top pills</string>
+    <string name="pill_inputs">Inputs</string>
+    <string name="pill_wifi">Wi-Fi</string>
+    <string name="pill_vpn">VPN</string>
+    <string name="pill_launcher">Launcher</string>
+    <string name="pill_settings">Settings</string>
+    <string name="pill_power">Power</string>
+    <string name="pill_full">Icon and label</string>
+    <string name="pill_compact">Icon only</string>
+    <string name="pill_state">%1$s: %2$s</string>
+    <string name="opt_power">Power pill</string>
+    <string name="power_off">Turn off</string>
+    <string name="power_restart">Restart</string>
+    <string name="power_ask_off">Turn off the Fire TV?</string>
+    <string name="power_ask_restart">Restart the Fire TV?</string>
+    <string name="power_confirm">Confirm</string>
+    <string name="power_going_off">Going to standby</string>
+    <string name="power_restarting">Restarting</string>
+    <string name="power_unavailable">This Fire TV does not let apps do that. Turn on the launcher accessibility service, or use the remote.</string>
 </resources>
