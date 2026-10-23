@@ -190,6 +190,8 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private int docked, emptySlots;
     /** Never shown as tiles (res/values/config.xml, hidden_apps). */
     private final Set<String> hidden;
+    /** show_all_apps: phone apps (LAUNCHER only) count as TV apps for visibility. */
+    private final boolean showAllApps;
     /** Apps pre-seeded into the App library's "added" set (config.xml library_apps); empty by default. */
     private final Set<String> libraryPreload;
     private final boolean animations;
@@ -217,6 +219,7 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         this.favourites = cfg.dockApps;
         this.fillDock = cfg.fillDock;
         this.hidden = new HashSet<>(cfg.hiddenApps);
+        this.showAllApps = cfg.showAllApps;
         this.libraryPreload = new HashSet<>(cfg.libraryApps);
         this.animations = cfg.animations;
         this.advancedEffects = cfg.animations && cfg.advancedEffects;
@@ -254,12 +257,18 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         Set<String> added = new HashSet<>(LibraryApps.load(ctx));
         added.addAll(libraryPreload);
         Set<String> removed = LibraryApps.loadRemoved(ctx);
-        if (!added.isEmpty()) {
+        // Phone apps: the added ones, or all of them with show_all_apps (most Fire TV apps have no leanback entry).
+        Set<String> phonePackages = new HashSet<>();
+        if (showAllApps || !added.isEmpty()) {
             Set<String> seen = new HashSet<>(tvPackages);
             for (ResolveInfo ri : pm.queryIntentActivities(
                     new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER), 0)) {
-                if (ri.activityInfo != null && added.contains(ri.activityInfo.packageName)
-                        && seen.add(ri.activityInfo.packageName)) found.add(ri);
+                if (ri.activityInfo == null) continue;
+                String pkg = ri.activityInfo.packageName;
+                if ((showAllApps || added.contains(pkg)) && seen.add(pkg)) {
+                    found.add(ri);
+                    phonePackages.add(pkg);
+                }
             }
         }
         Map<String, Cards.Card> cardByPkg = new HashMap<>();
@@ -272,7 +281,7 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             if (ri.activityInfo == null) continue;
             String pkg = ri.activityInfo.packageName;
             if (pkg.equals(ctx.getPackageName()) || !ri.activityInfo.exported
-                    || !LibraryApps.visible(tvPackages.contains(pkg), hidden.contains(pkg), added.contains(pkg), removed.contains(pkg))) continue;
+                    || !LibraryApps.visible(tvPackages.contains(pkg) || phonePackages.contains(pkg), hidden.contains(pkg), added.contains(pkg), removed.contains(pkg))) continue;
             ComponentName component = new ComponentName(pkg, ri.activityInfo.name);
             Cards.Card card = cardByPkg.get(pkg);
             if (card != null && !card.component.equals(component)) continue;   // the card stands in for this tile
@@ -594,6 +603,11 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     /** A position focus can land on: an empty dock slot gives the last dock app. */
     int focusablePosition(int position) {
         return DockSlots.focusable(position, docked, emptySlots);
+    }
+
+    /** Opens the app at {@code position} as a click on its tile would (tile menu, Open). */
+    void launchAt(int position) {
+        if (position >= 0 && position < items.size()) launch(items.get(position));
     }
 
     String labelAt(int position) {

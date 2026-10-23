@@ -122,6 +122,10 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     private boolean appLibraryEnabled;
     /** The same opt-in menu is available from either hold-OK or the remote's Menu key. */
     private boolean tileMenuEnabled;
+    /** long_press_move: hold OK moves the tile, the Menu key opens the tile menu. */
+    private boolean longPressMove;
+    /** The OK key that started a long-press move is still down: its repeats and its release must not drop the tile. */
+    private boolean swallowOk;
     private String inputAction;
     private String inputUriScheme;
     private String sourcePanelService;
@@ -370,6 +374,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         liveTvInputId = cfg.liveTvInputId;
         appLibraryEnabled = cfg.appLibrary;
         tileMenuEnabled = cfg.tileMenu;
+        longPressMove = cfg.tileMenu && cfg.longPressMove;
         inputAction = cfg.inputAction;
         inputUriScheme = cfg.inputUriScheme;
         sourcePanelService = cfg.sourcePanelService;
@@ -1116,7 +1121,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             if (position >= 0 && position < adapter.appCount()
                     && !getPackageName().equals(adapter.packageAt(position))) {
                 if (event.getAction() == KeyEvent.ACTION_UP && !event.isCanceled()) {
-                    onTileLongPress(position, getCurrentFocus());
+                    showTileMenu(position, getCurrentFocus());
                 }
                 return true;
             }
@@ -1127,6 +1132,10 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         int code = event.getKeyCode();
         boolean ok = code == KeyEvent.KEYCODE_DPAD_CENTER || code == KeyEvent.KEYCODE_ENTER
                 || code == KeyEvent.KEYCODE_NUMPAD_ENTER;
+        if (swallowOk && ok) {
+            if (!down) swallowOk = false;
+            return true;
+        }
         boolean back = code == KeyEvent.KEYCODE_BACK || code == KeyEvent.KEYCODE_ESCAPE;
         if (movingKey != null) {
             switch (code) {
@@ -2896,14 +2905,40 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         rows.getChildAt(0).requestFocus();
     }
 
-    /**
-     * Hold OK on a tile: a glass menu next to it. Move starts reorder mode with this tile already picked up;
-     * Remove from Home takes the shortcut off (only with the app library on, where one press adds it back);
-     * App info opens the TV's page for the app, which is what holding OK used to do.
-     */
+    /** Hold OK on a tile: with long_press_move it is picked up at once, otherwise the tile menu opens. */
     @Override
     public void onTileLongPress(int position, View card) {
         if (reordering) return;
+        if (!longPressMove) {
+            showTileMenu(position, card);
+            return;
+        }
+        String key = adapter.keyAt(position);
+        String pkg = adapter.packageAt(position);
+        if (key == null || pkg == null || pkg.equals(getPackageName()) || position >= adapter.movableCount()) return;
+        swallowOk = true;
+        moveTile(key);
+    }
+
+    /** Reorder mode with {@code key}'s tile already picked up. */
+    private void moveTile(String key) {
+        if (!beginReorder()) {
+            swallowOk = false;
+            return;
+        }
+        int at = adapter.positionOf(key);   // beginReorder can rebuild the tiles
+        if (at < 0) return;
+        focusTile(at);
+        pickUp(at);
+        Toast.makeText(this, R.string.reorder_hint, Toast.LENGTH_LONG).show();
+    }
+
+    /**
+     * The tile menu, next to the tile: Open, Move, dock, Hide (only with the app library, where one press adds it
+     * back), Force stop, App info (where data and cache are cleared) and Uninstall for apps the user installed.
+     */
+    private void showTileMenu(int position, View card) {
+        if (reordering || card == null) return;
         String key = adapter.keyAt(position);
         String pkg = adapter.packageAt(position);
         // Empty dock slots and the Default-home tile carry the launcher's own package: no menu for them.
@@ -2911,25 +2946,27 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         View panel = getLayoutInflater().inflate(R.layout.popup_inputs, root, false);
         LinearLayout rows = panel.findViewById(R.id.rows);
         PopupWindow popup = glassPopup(panel, (int) (200 * density));
+        addSettingsMenuRow(rows, popup, R.string.tile_open, () -> {
+            int at = adapter.positionOf(key);
+            if (at >= 0) adapter.launchAt(at);
+        });
+        if (position < adapter.movableCount()) addSettingsMenuRow(rows, popup, R.string.tile_move, () -> moveTile(key));
         if (dockRow && position < adapter.movableCount()) {
             boolean inDock = position < COLUMNS;
             addSettingsMenuRow(rows, popup, inDock ? R.string.tile_replace_in_dock : R.string.tile_add_to_dock,
                     () -> startDockEditFor(key, inDock));
         }
-        if (position < adapter.movableCount()) addSettingsMenuRow(rows, popup, R.string.tile_move, () -> {
-            if (!beginReorder()) return;
-            int at = adapter.positionOf(key);   // beginReorder can rebuild the tiles
-            if (at < 0) return;
-            focusTile(at);
-            pickUp(at);
-            Toast.makeText(this, R.string.reorder_hint, Toast.LENGTH_LONG).show();
+        if (appLibraryEnabled) addSettingsMenuRow(rows, popup, R.string.tile_hide, () -> {
+            if (LibraryApps.save(this, pkg, false)) {
+                reloadApps(false);
+                Toast.makeText(this, R.string.tile_hidden, Toast.LENGTH_LONG).show();
+            } else Toast.makeText(this, R.string.library_save_failed, Toast.LENGTH_LONG).show();
         });
-        if (appLibraryEnabled) addSettingsMenuRow(rows, popup, R.string.library_remove_shortcut, () -> {
-            if (LibraryApps.save(this, pkg, false)) reloadApps(false);
-            else Toast.makeText(this, R.string.library_save_failed, Toast.LENGTH_LONG).show();
-        });
-        addSettingsMenuRow(rows, popup, R.string.library_app_info, () -> open(new Intent(
-                Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + pkg))));
+        addSettingsMenuRow(rows, popup, R.string.tile_force_stop, () -> AppActions.stop(this, pkg));
+        addSettingsMenuRow(rows, popup, R.string.tile_app_info, () -> open(AppActions.info(pkg)));
+        if (AppActions.removable(this, pkg)) {
+            addSettingsMenuRow(rows, popup, R.string.tile_uninstall, () -> open(AppActions.uninstall(pkg)));
+        }
         panel.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
         popup.setWidth(Math.max((int) (200 * density), panel.getMeasuredWidth()));
         // Dock tiles sit near the bottom of the screen: open the menu above the tile when it would not fit below.

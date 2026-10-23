@@ -21,6 +21,15 @@ Optional signing secrets (Settings → Secrets and variables → Actions); witho
 keytool -genkeypair -v -keystore fire.jks -alias fire -keyalg RSA -keysize 2048 -validity 10000
 ```
 
+## On the TV
+
+- Hold OK on a tile: move it (arrows, then OK or Back to drop it).
+- Menu key (☰): Open, Move, dock, Hide from Home, Force stop, App info (clear data and cache), Uninstall.
+- Hidden apps come back from the App library (button in the top bar).
+- Launcher settings: 4 to 8 tiles per row.
+- Every installed app shows, TV or phone (`show_all_apps`); theme keys `tile_menu`, `long_press_move`,
+  `app_library`, `show_all_apps` turn each part off.
+
 ## Install
 
 ```bash

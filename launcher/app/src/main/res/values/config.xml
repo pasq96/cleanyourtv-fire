@@ -203,6 +203,15 @@
          so its corners are concentric with the tiles' and the spacing reads even. false (the default) keeps the fixed
          14dp above and below, up to 22dp at the sides and 26dp corners. Can also be set with "dock_even_padding": true in a theme's config.json. -->
     <bool name="dock_even_padding">false</bool>
+
+    <!-- Phone apps (a LAUNCHER entry but no leanback one) show on Home like TV apps, instead of only after being added
+         from the App library. Most Fire TV and sideloaded apps are like that. On by default on Fire OS (FireOs.java);
+         "show_all_apps" in a theme's config.json. -->
+    <bool name="show_all_apps">false</bool>
+
+    <!-- Hold OK on a tile picks it up to move it (as Move in the tile menu does); the remote's Menu key opens the tile
+         menu. Needs tile_menu. On by default on Fire OS, whose remote has a Menu key; "long_press_move" in a theme. -->
+    <bool name="long_press_move">false</bool>
     <!-- A reorder button (two arrows) in the top bar. Off by default: reordering is also in the Settings
          button's long-press menu, so it needs no extra button on screen. -->
     <bool name="reorder_button">false</bool>
