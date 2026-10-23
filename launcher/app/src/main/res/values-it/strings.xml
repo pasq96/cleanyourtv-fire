@@ -187,11 +187,6 @@
     <string name="d_weather_key">Chiave gratuita da openweathermap.org. Mostra il meteo accanto all\'orologio.</string>
     <string name="d_weather_city">Città con codice paese. Il testo tra parentesi è solo mostrato: Poggiomarino (NA),IT.</string>
     <string name="sec_grid">Griglia</string>
-    <string name="d_wifi_name">Android mostra il nome della rete solo con il permesso di posizione.</string>
-    <string name="wifi_name_state">Nome della rete sul pulsante Wi-Fi: %1$s</string>
-    <string name="wifi_name_ok">mostrato</string>
-    <string name="wifi_name_ask">serve il permesso</string>
-    <string name="wifi_name_adb">Nessuna richiesta di permesso su questa TV. Da computer: adb shell pm grant com.gathin.tvhome android.permission.ACCESS_FINE_LOCATION</string>
     <string name="weather_units_state">Temperatura: %1$s</string>
     <string name="weather_celsius">Celsius</string>
     <string name="weather_fahrenheit">Fahrenheit</string>
@@ -210,10 +205,6 @@
     <string name="power_restart">Riavvia</string>
     <string name="power_unavailable">Questa Fire TV non permette alle app di farlo. Attiva il servizio di accessibilità del launcher (tasto Home) e riprova.</string>
     <string name="power_lock">Blocco</string>
-    <string name="wifi_name_off">posizione spenta</string>
-    <string name="wifi_name_hidden">nascosto dal sistema</string>
-    <string name="wifi_name_cmd">La posizione è spenta. Da computer: adb shell pm grant com.gathin.tvhome android.permission.WRITE_SECURE_SETTINGS, poi premi di nuovo questa riga (oppure adb shell settings put secure location_mode 3).</string>
-    <string name="wifi_name_loc">Permesso e posizione sono attivi. Se il nome manca ancora, riconnettiti alla rete.</string>
     <string name="lbl_banner">Stile banner</string>
     <string name="lbl_animations">Animazioni</string>
     <string name="lbl_sort">Ordine delle app</string>

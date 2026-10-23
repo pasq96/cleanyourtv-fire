@@ -26,7 +26,7 @@ final class DailyWallpaper {
     static final String SOURCE_KEY = "daily_source", STAMP_KEY = "daily_stamp", CHOICE = "daily";
     static final int OFF = 0, PICSUM = 1, BING = 2;
     private static final int MAX_BYTES = 9 * 1024 * 1024;
-    private static volatile boolean running;
+    private static volatile int running = -1;
 
     private DailyWallpaper() {}
 
@@ -64,8 +64,8 @@ final class DailyWallpaper {
         Context app = ctx.getApplicationContext();
         SharedPreferences prefs = app.getSharedPreferences(Config.SETTINGS_NAME, Context.MODE_PRIVATE);
         int source = source(prefs);
-        if (source == OFF || running || (!force && current(app, prefs))) return;
-        running = true;
+        if (source == OFF || running == source || (!force && current(app, prefs))) return;
+        running = source;
         Handler main = new Handler(Looper.getMainLooper());
         new Thread(() -> {
             boolean changed = false;
@@ -79,27 +79,33 @@ final class DailyWallpaper {
                 String url = source == PICSUM ? "https://picsum.photos/seed/" + today + "/1920/1080.jpg" : bingUrl();
                 byte[] data = download(url);
                 if (data.length < 10_000) throw new IOException("empty picture");
-                File target = new File(wallpapers, "daily-" + today + ".jpg"), tmp = new File(wallpapers, "daily.tmp");
+                File target = new File(wallpapers, "daily-" + today + ".jpg"), tmp = new File(wallpapers, "part-" + source);
                 try (FileOutputStream out = new FileOutputStream(tmp)) {
                     out.write(data);
                 }
-                if (!tmp.renameTo(target)) {
-                    target.delete();
-                    if (!tmp.renameTo(target)) throw new IOException("cannot save");
+                synchronized (DailyWallpaper.class) {
+                    if (source(prefs) != source) {
+                        tmp.delete();
+                        throw new IOException("source changed");
+                    }
+                    if (!tmp.renameTo(target)) {
+                        target.delete();
+                        if (!tmp.renameTo(target)) throw new IOException("cannot save");
+                    }
+                    File[] old = wallpapers.listFiles();
+                    if (old != null) for (File f : old) {
+                        if (f.getName().startsWith("daily-") && !f.getName().equals(target.getName())) f.delete();
+                    }
+                    prefs.edit().putString(STAMP_KEY, source + ":" + today).putString(Config.WALLPAPER_CHOICE_KEY, CHOICE)
+                            .putLong(Config.SETTINGS_REVISION_KEY, prefs.getLong(Config.SETTINGS_REVISION_KEY, 0) + 1).apply();
                 }
-                File[] old = wallpapers.listFiles();
-                if (old != null) for (File f : old) {
-                    if (f.getName().startsWith("daily-") && !f.getName().equals(target.getName())) f.delete();
-                }
-                prefs.edit().putString(STAMP_KEY, source + ":" + today).putString(Config.WALLPAPER_CHOICE_KEY, CHOICE)
-                        .putLong(Config.SETTINGS_REVISION_KEY, prefs.getLong(Config.SETTINGS_REVISION_KEY, 0) + 1).apply();
                 changed = true;
             } catch (Exception e) {
                 error = e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName();
             }
             final boolean c = changed;
             final String err = error;
-            running = false;
+            if (running == source) running = -1;
             if (done != null) main.post(() -> done.finished(c, err));
         }, "daily-wallpaper").start();
     }
