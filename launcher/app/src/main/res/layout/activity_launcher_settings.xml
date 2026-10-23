@@ -55,6 +55,11 @@
                     android:text="@string/d_wallpaper" />
             </LinearLayout>
             <LinearLayout
+                android:id="@+id/segDaily"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
+            <LinearLayout
                 android:id="@+id/segBanner"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -190,14 +195,10 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical" />
             <LinearLayout
-                style="@style/SettingsBlock">
-                <TextView
-                    android:id="@+id/wifiNameChoice"
-                    style="@style/SettingsRow" />
-                <TextView
-                    style="@style/SettingsNote"
-                    android:text="@string/d_wifi_name" />
-            </LinearLayout>
+                android:id="@+id/segWifiName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
             <LinearLayout
                 style="@style/SettingsBlock">
                 <TextView
@@ -300,6 +301,7 @@
                     style="@style/SettingsRow"
                 android:text="@string/home_settings" />
                 <TextView
+                    android:id="@+id/homeNote"
                     style="@style/SettingsNote"
                     android:text="@string/d_home" />
             </LinearLayout>

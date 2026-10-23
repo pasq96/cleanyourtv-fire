@@ -493,6 +493,7 @@ final class Config {
         // An on-TV wallpaper pick overrides the theme: a filename from the wallpapers/
         // collection, or "none". Unset means the theme decides (off by default).
         String wallpaperChoice = choices.getString(WALLPAPER_CHOICE_KEY, null);
+        if (DailyWallpaper.CHOICE.equals(wallpaperChoice)) wallpaperChoice = DailyWallpaper.latestName(dir);
         List<File> chosen = WallpaperRotation.chosen(dir == null ? Collections.emptyList()
                 : WallpaperRotation.images(new File(dir, "wallpapers")), wallpaper, wallpaperChoice);
         if (chosen != null) {

@@ -849,6 +849,8 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             return;
         }
         askLocationForSsid();
+        // Daily wallpaper: once the new picture is saved the change count moves and Home rebuilds with it.
+        DailyWallpaper.refresh(this, false, (changed, error) -> { if (changed && !isDestroyed()) recreate(); });
         updateWeather();
         restartIdleClock();
         promptsPaused = false;
@@ -2409,6 +2411,10 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     }
 
     /** Shows the Wi-Fi network name on the button when we can read it, otherwise the connection type. */
+    private SharedPreferences pillChoices() {
+        return getSharedPreferences(Config.SETTINGS_NAME, MODE_PRIVATE);
+    }
+
     private void updateWifiLabel() {
         String text = getString(R.string.wifi);
         boolean vpn = false, online = false;
@@ -2444,9 +2450,12 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
                 WifiManager wm = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
                 WifiInfo info = wm != null ? wm.getConnectionInfo() : null;
                 flame = info != null ? Math.max(1, Math.min(4, WifiManager.calculateSignalLevel(info.getRssi(), 5))) : 3;
-                String name = WifiName.read(this);
-                if (name == null && WifiName.permission(this) && !WifiName.locationOn(this) && WifiName.enableLocation(this)) {
-                    name = WifiName.read(this);   // location was off: this app turned it on
+                String name = null;
+                if (pillChoices().getBoolean("wifi_show_name", true)) {
+                    name = WifiName.read(this);
+                    if (name == null && WifiName.permission(this) && !WifiName.locationOn(this) && WifiName.enableLocation(this)) {
+                        name = WifiName.read(this);   // location was off: this app turned it on
+                    }
                 }
                 if (name != null) text = name;
             }

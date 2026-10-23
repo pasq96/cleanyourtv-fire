@@ -43,7 +43,7 @@
     <string name="dream_name">Clock</string>
     <string name="vpn">VPN</string>
     <string name="vpn_off">VPN off</string>
-    <string name="home_settings">Choose default home</string>
+    <string name="home_settings">Default home (Android TV only)</string>
     <string name="home_settings_help">Select your original home to stop using CleanYourTV as Home, or CleanYourTV to switch back. The original launcher must be enabled and your TV must provide a home picker; use the restore script first if it was disabled.</string>
     <string name="launcher_settings">Launcher settings</string>
     <string name="columns_label">Apps per row</string>
@@ -58,7 +58,7 @@
     <string name="advanced_effects">Advanced effects</string>
     <string name="advanced_effects_state">Advanced effects: %1$s</string>
     <string name="advanced_effects_warning">Adds a lifted tile, icon zoom and smooth colour transitions. May increase memory use; the actual difference depends on your TV.</string>
-    <string name="follow_theme">Follow theme</string>
+    <string name="follow_theme">Back to theme values</string>
     <string name="follow_theme_hint">Uses the current theme or built-in layout and motion settings. Pushing or resetting a theme also clears your on-TV choices.</string>
     <string name="tv_settings">TV system settings</string>
     <string name="quick_picture">Display</string>
@@ -204,15 +204,15 @@
     <string name="d_hidden">Tick the apps to hide from Home, clear to show.</string>
     <string name="d_show_all">List apps that have no TV launcher entry too.</string>
     <string name="d_long_press">Hold OK on a tile to pick it up and move it.</string>
-    <string name="d_names">Show the app name under every tile.</string>
+    <string name="d_names">On: every tile shows its name under it, even when the banner already has it. Off: the name appears only on the tile in focus.</string>
     <string name="d_inputs">Button in the top bar for HDMI and other inputs.</string>
     <string name="d_wifi">Button in the top bar with the network name.</string>
     <string name="d_vpn">Apps the VPN button opens. Green = on, red = off.</string>
     <string name="d_backup">Saves settings, order and hidden apps to a file.</string>
     <string name="d_restore">Loads the saved file back.</string>
-    <string name="d_follow">Drops your choices and uses the theme\'s values.</string>
+    <string name="d_follow">Clears the choices made here (columns, rows, dock, animations, wallpaper, top buttons, VPN) and uses the theme\'s values again. The theme and hidden apps stay.</string>
     <string name="d_reset">Clears every choice. VPN goes back to none.</string>
-    <string name="d_home">The system\'s default-home picker.</string>
+    <string name="d_home">Opens the system picker to choose the home app. It works on Android TV; on Fire OS it does not.</string>
     <string name="d_tv">Android / Fire OS settings.</string>
     <string name="sec_buttons">Buttons and network</string>
     <string name="opt_inputs">Inputs button</string>
@@ -275,4 +275,21 @@
     <string name="banner_glass">glass</string>
     <string name="theme_title">Theme</string>
     <string name="d_power">Opens the system power menu.</string>
+    <string name="banner_solid">solid</string>
+    <string name="banner_frame">frame</string>
+    <string name="lbl_wifi_name">Network name on the Wi-Fi button</string>
+    <string name="wifi_hidden">hidden</string>
+    <string name="wifi_shown">shown</string>
+    <string name="d_inputs">Only appears when the TV has sources to switch to (HDMI, antenna, Live TV). Without any, such as on a Fire TV Stick, it stays hidden.</string>
+    <string name="home_fire_note">Not available on Fire OS: Amazon keeps the Home key. CleanYourTV takes it over through its accessibility service instead.</string>
+    <string name="lbl_daily">Daily wallpaper</string>
+    <string name="d_daily">A new picture each day, downloaded once when Home opens. Picsum: a photo that changes with the date. Bing: the Bing picture of the day.</string>
+    <string name="daily_off">off</string>
+    <string name="daily_picsum">Picsum</string>
+    <string name="daily_bing">Bing</string>
+    <string name="daily_ok">Daily wallpaper updated</string>
+    <string name="daily_failed">Daily wallpaper not downloaded: %1$s</string>
+    <string name="wifi_problem_perm">The Wi-Fi name needs the location permission, which this TV did not grant.</string>
+    <string name="wifi_problem_loc">Location is off and this app cannot turn it on.</string>
+    <string name="wifi_problem_hidden">Android is hiding the network name. Reconnect to the network and try again.</string>
 </resources>

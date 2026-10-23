@@ -18,12 +18,13 @@ final class Themes {
     static final String[] IDS = {"fire", "glass", "aurora", "clean", "stock"};
 
     static final String BANNER_STYLE_KEY = "banner_style";
-    static final int BANNER_OFF = 0, BANNER_STRETCH = 1, BANNER_GRADIENT = 2, BANNER_BLUR = 3, BANNER_GLASS = 4;
+    static final int BANNER_OFF = 0, BANNER_STRETCH = 1, BANNER_GRADIENT = 2, BANNER_BLUR = 3, BANNER_GLASS = 4,
+            BANNER_SOLID = 5, BANNER_FRAME = 6;
 
     /** How tiles of apps without a TV banner are drawn: icon stretched to fill, icon on a gradient, or the plain icon. */
     static int bannerStyle(Context ctx) {
         int v = ctx.getSharedPreferences(Config.SETTINGS_NAME, Context.MODE_PRIVATE).getInt(BANNER_STYLE_KEY, BANNER_STRETCH);
-        return v >= BANNER_OFF && v <= BANNER_GLASS ? v : BANNER_STRETCH;
+        return v >= BANNER_OFF && v <= BANNER_FRAME ? v : BANNER_STRETCH;
     }
 
     static final String SORT_RECENT_KEY = "sort_recent";

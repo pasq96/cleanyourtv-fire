@@ -35,7 +35,7 @@ public final class LauncherSettingsActivity extends Activity {
     private View advancedBlock;
     private TextView followThemeChoice;
     private TextView themeChoice;
-    private TextView vpnChoice, wifiNameChoice;
+    private TextView vpnChoice;
     private final List<Runnable> toggleRefreshers = new ArrayList<>();
     private int columns;
     private int rowsBelowDock;
@@ -132,35 +132,42 @@ public final class LauncherSettingsActivity extends Activity {
                 }));
         findViewById(R.id.weatherKeyChoice).setOnClickListener(v -> askText(Weather.KEY_API, R.string.weather_key));
         findViewById(R.id.weatherCityChoice).setOnClickListener(v -> askText(Weather.KEY_CITY, R.string.weather_city));
-        wifiNameChoice = findViewById(R.id.wifiNameChoice);
-        wifiNameChoice.setOnClickListener(v -> {
-            if (locationGranted()) {
-                if (!WifiName.enableLocation(this)) Toast.makeText(this, R.string.wifi_name_cmd, Toast.LENGTH_LONG).show();
-                else Toast.makeText(this, R.string.wifi_name_loc, Toast.LENGTH_LONG).show();
-                changed();
-                refresh();
-                return;
-            }
-            try {
-                requestPermissions(new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, 78);
-            } catch (RuntimeException e) {
-                Toast.makeText(this, R.string.wifi_name_adb, Toast.LENGTH_LONG).show();
-            }
-        });
+        addSegmented(findViewById(R.id.segWifiName), R.string.lbl_wifi_name, 0, new int[]{R.string.wifi_hidden, R.string.wifi_shown},
+                () -> choices.getBoolean("wifi_show_name", true) ? 1 : 0, i -> {
+                    choices.edit().putBoolean("wifi_show_name", i == 1).apply();
+                    if (i == 1) checkWifiName();
+                });
+        addSegmented(findViewById(R.id.segDaily), R.string.lbl_daily, R.string.d_daily,
+                new int[]{R.string.daily_off, R.string.daily_picsum, R.string.daily_bing},
+                () -> DailyWallpaper.source(choices), i -> {
+                    SharedPreferences.Editor e = choices.edit().putInt(DailyWallpaper.SOURCE_KEY, i).remove(DailyWallpaper.STAMP_KEY);
+                    if (i == DailyWallpaper.OFF) {
+                        if (DailyWallpaper.CHOICE.equals(choices.getString(Config.WALLPAPER_CHOICE_KEY, null))) e.remove(Config.WALLPAPER_CHOICE_KEY);
+                        e.apply();
+                        return;
+                    }
+                    e.apply();
+                    DailyWallpaper.refresh(this, true, (ok, error) -> {
+                        if (isDestroyed()) return;
+                        if (error != null) Toast.makeText(this, getString(R.string.daily_failed, error), Toast.LENGTH_LONG).show();
+                        else { Toast.makeText(this, R.string.daily_ok, Toast.LENGTH_SHORT).show(); setResult(RESULT_OK); refresh(); }
+                    });
+                });
         LinearLayout toggles = findViewById(R.id.togglesContainer);
         addToggle(toggles, "show_all_apps", R.string.opt_show_all_apps, R.string.d_show_all, config.showAllApps);
         addToggle(toggles, "long_press_move", R.string.opt_long_press_move, R.string.d_long_press, config.longPressMove);
-        addToggle(toggles, "always_show_names", R.string.opt_names, 0, config.alwaysShowNames);
+        addToggle(toggles, "always_show_names", R.string.opt_names, R.string.d_names, config.alwaysShowNames);
         LinearLayout buttons = findViewById(R.id.buttonsContainer);
-        addToggle(buttons, "show_inputs_pill", R.string.opt_inputs, 0, config.showInputsPill);
+        addToggle(buttons, "show_inputs_pill", R.string.opt_inputs, R.string.d_inputs, config.showInputsPill);
         addToggle(buttons, "show_network_pill", R.string.opt_wifi, 0, config.showNetworkPill);
         addToggle(buttons, Pills.SHOW_POWER_KEY, R.string.opt_power, R.string.d_power, true);
         addPillStyles((LinearLayout) findViewById(R.id.pillsContainer), config);
         addSegmented(findViewById(R.id.segLift), R.string.dock_position, R.string.d_dock_height,
                 new int[]{R.string.dock_pos_0, R.string.dock_pos_1, R.string.dock_pos_2, R.string.dock_pos_3},
                 () -> Math.min(3, choices.getInt("dock_lift", 1)), i -> choices.edit().putInt("dock_lift", i).apply());
-        addSegmented(findViewById(R.id.segBanner), R.string.lbl_banner, R.string.d_banner,
-                new int[]{R.string.banner_off, R.string.banner_stretch, R.string.banner_gradient, R.string.banner_blur, R.string.banner_glass},
+        addPicker(findViewById(R.id.segBanner), R.string.lbl_banner, R.string.d_banner,
+                new int[]{R.string.banner_off, R.string.banner_stretch, R.string.banner_gradient, R.string.banner_blur, R.string.banner_glass,
+                        R.string.banner_solid, R.string.banner_frame},
                 () -> Themes.bannerStyle(this), i -> choices.edit().putInt(Themes.BANNER_STYLE_KEY, i).apply());
         addSegmented(findViewById(R.id.segAnimations), R.string.lbl_animations, R.string.d_animations, new int[]{R.string.on, R.string.off},
                 () -> animations ? 0 : 1, i -> {
@@ -211,11 +218,17 @@ public final class LauncherSettingsActivity extends Activity {
             choices.edit().remove(Config.VPN_APP_KEY).remove("columns").remove(Config.ROWS_BELOW_DOCK_KEY).remove("animations")
                     .remove("advanced_effects").remove(Config.WALLPAPER_CHOICE_KEY)
                     .remove(Config.DOCK_OPACITY_KEY).remove("show_all_apps").remove("long_press_move")
-                    .remove("always_show_names").remove("show_inputs_pill").remove("show_network_pill").remove("dock_lift").commit();
+                    .remove("always_show_names").remove("show_inputs_pill").remove("show_network_pill").remove("dock_lift")
+                    .remove(DailyWallpaper.SOURCE_KEY).commit();
             changed();
             recreate();
         });
+        if (FireOs.is(this)) ((TextView) findViewById(R.id.homeNote)).setText(R.string.home_fire_note);
         findViewById(R.id.defaultHomeChoice).setOnClickListener(v -> {
+            if (FireOs.is(this)) {
+                Toast.makeText(this, R.string.home_fire_note, Toast.LENGTH_LONG).show();
+                return;
+            }
             Toast.makeText(this, R.string.home_settings_help, Toast.LENGTH_LONG).show();
             open(new Intent(Settings.ACTION_HOME_SETTINGS));
         });
@@ -226,15 +239,71 @@ public final class LauncherSettingsActivity extends Activity {
         else columnChoices[Math.max(0, Math.min(columns - 4, columnChoices.length - 1))].requestFocus();
     }
 
+    /**
+     * D-pad navigation by rows: Up and Down go to the next or previous row (a capsule of options, or a single
+     * button) and land on the option nearest to where the focus was; Left and Right stay inside the row. The stock
+     * focus search lost rows whose options sit beside a wide neighbour, so some rows could not be reached.
+     */
+    @Override
+    public boolean dispatchKeyEvent(android.view.KeyEvent event) {
+        int code = event.getKeyCode();
+        boolean vertical = code == android.view.KeyEvent.KEYCODE_DPAD_UP || code == android.view.KeyEvent.KEYCODE_DPAD_DOWN;
+        boolean horizontal = code == android.view.KeyEvent.KEYCODE_DPAD_LEFT || code == android.view.KeyEvent.KEYCODE_DPAD_RIGHT;
+        View focused = getCurrentFocus();
+        if (!(vertical || horizontal) || focused == null) return super.dispatchKeyEvent(event);
+        if (event.getAction() != android.view.KeyEvent.ACTION_DOWN) return true;
+        if (horizontal) {
+            super.dispatchKeyEvent(event);
+            View now = getCurrentFocus();
+            if (now != null && now != focused && now.getParent() != focused.getParent()) focused.requestFocus();
+            return true;
+        }
+        ArrayList<View> all = new ArrayList<>();
+        findViewById(android.R.id.content).addFocusables(all, View.FOCUS_DOWN);
+        List<android.view.ViewParent> groups = new ArrayList<>();
+        for (View v : all) if (v.getVisibility() == View.VISIBLE && !groups.contains(v.getParent())) groups.add(v.getParent());
+        int at = groups.indexOf(focused.getParent());
+        int to = at + (code == android.view.KeyEvent.KEYCODE_DPAD_DOWN ? 1 : -1);
+        if (at < 0 || to < 0 || to >= groups.size()) return true;
+        int[] loc = new int[2];
+        focused.getLocationOnScreen(loc);
+        float cx = loc[0] + focused.getWidth() / 2f;
+        View best = null;
+        float bestDistance = Float.MAX_VALUE;
+        for (View v : all) {
+            if (v.getParent() != groups.get(to) || v.getVisibility() != View.VISIBLE) continue;
+            v.getLocationOnScreen(loc);
+            float distance = Math.abs(loc[0] + v.getWidth() / 2f - cx);
+            if (distance < bestDistance) { bestDistance = distance; best = v; }
+        }
+        if (best != null) best.requestFocus();
+        return true;
+    }
+
     private boolean locationGranted() {
         return checkSelfPermission(android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
+    }
+
+    /** "Mostrato" was chosen: say briefly what stops the name from appearing, or fix what can be fixed. */
+    private void checkWifiName() {
+        if (!locationGranted()) {
+            try {
+                requestPermissions(new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, 78);
+            } catch (RuntimeException e) {
+                Toast.makeText(this, R.string.wifi_problem_perm, Toast.LENGTH_LONG).show();
+            }
+            return;
+        }
+        if (!WifiName.enableLocation(this)) Toast.makeText(this, R.string.wifi_problem_loc, Toast.LENGTH_LONG).show();
+        else if (WifiName.read(this) == null) Toast.makeText(this, R.string.wifi_problem_hidden, Toast.LENGTH_LONG).show();
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] results) {
         super.onRequestPermissionsResult(requestCode, permissions, results);
         if (requestCode != 78) return;
-        if (!locationGranted()) Toast.makeText(this, R.string.wifi_name_adb, Toast.LENGTH_LONG).show();
+        if (!locationGranted()) Toast.makeText(this, R.string.wifi_problem_perm, Toast.LENGTH_LONG).show();
+        else checkWifiName();
         changed();
         refresh();
     }
@@ -266,7 +335,8 @@ public final class LauncherSettingsActivity extends Activity {
                     choices.edit().putString(Themes.KEY, Themes.IDS[which]).remove("columns").remove(Config.ROWS_BELOW_DOCK_KEY)
                             .remove("animations").remove("advanced_effects").remove(Config.WALLPAPER_CHOICE_KEY)
                             .remove(Config.DOCK_OPACITY_KEY).remove("show_all_apps").remove("long_press_move")
-                            .remove("always_show_names").remove("show_inputs_pill").remove("show_network_pill").remove("dock_lift").commit();
+                            .remove("always_show_names").remove("show_inputs_pill").remove("show_network_pill").remove("dock_lift")
+                    .remove(DailyWallpaper.SOURCE_KEY).commit();
                     changed();
                     recreate();   // rows and toggles take the new theme's defaults
                 })
@@ -278,6 +348,7 @@ public final class LauncherSettingsActivity extends Activity {
         File dir = Config.dir(this);
         List<File> images = new java.util.ArrayList<>(WallpaperRotation.images(
                 dir == null ? null : new File(dir, "wallpapers")));
+        images.removeIf(f -> f.getName().startsWith("daily-"));
         // A theme with a single wallpaper.jpg offers that picture too (Config maps the choice back to it).
         File single = dir == null ? null : new File(dir, Config.WALLPAPER_NAME);
         if (single != null && single.isFile()) images.add(0, single);
@@ -291,6 +362,7 @@ public final class LauncherSettingsActivity extends Activity {
         if (checked >= 0) on[checked] = true;
         new GlassDialog(this, getString(R.string.wallpaper_label)).width(560)
                 .list(labels, on, false, which -> {
+                    choices.edit().putInt(DailyWallpaper.SOURCE_KEY, DailyWallpaper.OFF).apply();   // a manual pick ends the daily one
                     if (which == images.size()) {
                         choices.edit().putString(Config.WALLPAPER_CHOICE_KEY, "none").apply();
                     } else {
@@ -302,7 +374,7 @@ public final class LauncherSettingsActivity extends Activity {
                 })
                 .button(android.R.string.cancel, null)
                 .button(R.string.wallpaper_theme_default, () -> {
-                    choices.edit().remove(Config.WALLPAPER_CHOICE_KEY).apply();
+                    choices.edit().remove(Config.WALLPAPER_CHOICE_KEY).putInt(DailyWallpaper.SOURCE_KEY, DailyWallpaper.OFF).apply();
                     changed();
                     refresh();
                 })
@@ -346,6 +418,7 @@ public final class LauncherSettingsActivity extends Activity {
         }
         advancedBlock.setAlpha(animations ? 1f : 0.45f);
         String wallpaperCurrent = choices.getString(Config.WALLPAPER_CHOICE_KEY, null);
+        if (DailyWallpaper.CHOICE.equals(wallpaperCurrent)) wallpaperCurrent = getString(R.string.lbl_daily);
         wallpaperChoice.setText(getString(R.string.wallpaper_state,
                 "none".equals(wallpaperCurrent) ? getString(R.string.wallpaper_none)
                         : wallpaperCurrent != null ? wallpaperCurrent
@@ -356,9 +429,6 @@ public final class LauncherSettingsActivity extends Activity {
                 wkey.isEmpty() ? getString(R.string.weather_unset) : getString(R.string.weather_set)));
         ((TextView) findViewById(R.id.weatherCityChoice)).setText(getString(R.string.weather_city_state,
                 wcity.isEmpty() ? getString(R.string.weather_unset) : wcity));
-        wifiNameChoice.setText(getString(R.string.wifi_name_state,
-                getString(!locationGranted() ? R.string.wifi_name_ask : !WifiName.locationOn(this) ? R.string.wifi_name_off
-                        : WifiName.read(this) != null ? R.string.wifi_name_ok : R.string.wifi_name_hidden)));
         for (Runnable r : toggleRefreshers) r.run();
         String vpns = choices.getString(Config.VPN_APP_KEY, null);
         if (vpns == null) vpns = themeVpnApp;
@@ -434,6 +504,56 @@ public final class LauncherSettingsActivity extends Activity {
         });
         parent.addView(block, blockLp);
         return block;
+    }
+
+    /** One setting with many options: the label and the current choice, which opens a glass list. */
+    private void addPicker(LinearLayout parent, int label, int note, int[] options,
+                           java.util.function.IntSupplier current, java.util.function.IntConsumer set) {
+        float d = getResources().getDisplayMetrics().density;
+        LinearLayout block = new LinearLayout(this);
+        block.setOrientation(LinearLayout.HORIZONTAL);
+        block.setGravity(android.view.Gravity.CENTER_VERTICAL);
+        LinearLayout.LayoutParams blockLp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        blockLp.topMargin = (int) (12 * d);
+        LinearLayout text = new LinearLayout(this);
+        text.setOrientation(LinearLayout.VERTICAL);
+        TextView name = new TextView(this, null, 0, R.style.SettingsLabel);
+        name.setText(label);
+        text.addView(name);
+        if (note != 0) {
+            TextView hint = new TextView(this, null, 0, R.style.SettingsNote);
+            hint.setText(note);
+            text.addView(hint);
+        }
+        block.addView(text, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1));
+        LinearLayout capsule = new LinearLayout(this, null, 0, R.style.SettingsSegments);
+        TextView value = new TextView(this, null, 0, R.style.SettingsSeg);
+        value.setSelected(true);
+        value.setOnClickListener(v -> {
+            CharSequence[] labels = new CharSequence[options.length];
+            boolean[] on = new boolean[options.length];
+            for (int i = 0; i < options.length; i++) {
+                String o = getString(options[i]);
+                labels[i] = o.substring(0, 1).toUpperCase() + o.substring(1);
+                on[i] = i == current.getAsInt();
+            }
+            new GlassDialog(this, getString(label)).width(480)
+                    .list(labels, on, false, which -> {
+                        if (which == current.getAsInt()) return;
+                        set.accept(which);
+                        changed();
+                        refresh();
+                    })
+                    .button(android.R.string.cancel, null)
+                    .show();
+        });
+        capsule.addView(value, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, (int) (44 * d)));
+        block.addView(capsule, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        toggleRefreshers.add(() -> {
+            String o = getString(options[Math.max(0, Math.min(options.length - 1, current.getAsInt()))]);
+            value.setText(o.substring(0, 1).toUpperCase() + o.substring(1) + "  \u25BE");
+        });
+        parent.addView(block, blockLp);
     }
 
     /** One setting per top pill: icon with label, or icon only, independently of the others. */

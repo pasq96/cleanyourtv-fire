@@ -25,8 +25,9 @@ final class IconBanner {
     private IconBanner() {}
 
     /** @param style a Themes.BANNER_* value: stretched icon, gradient (default here), blurred or glass backdrop. */
-    static Drawable make(Resources res, Drawable icon, int style) {
+    static Drawable make(Resources res, Drawable icon, int style, String label) {
         if (icon == null) return null;
+        if (style == Themes.BANNER_SOLID || style == Themes.BANNER_FRAME) return flat(res, icon, style == Themes.BANNER_FRAME, label);
         if (style == Themes.BANNER_BLUR || style == Themes.BANNER_GLASS) return backdrop(res, icon, style == Themes.BANNER_GLASS);
         if (style == Themes.BANNER_STRETCH) {
             Bitmap filled = Bitmap.createBitmap(W, H, Bitmap.Config.ARGB_8888);
@@ -70,6 +71,57 @@ final class IconBanner {
             c.clipPath(clip);
             drawCentered(c, icon, size);
             c.restore();
+        }
+        return new BitmapDrawable(res, out);
+    }
+
+    /**
+     * Solid: one flat colour from the icon with the icon centred. Frame: a gradient pane with a thin light frame,
+     * the icon above and the app name under it.
+     */
+    private static Drawable flat(Resources res, Drawable icon, boolean frame, String label) {
+        Bitmap out = Bitmap.createBitmap(W, H, Bitmap.Config.ARGB_8888);
+        Canvas c = new Canvas(out);
+        int base = edgeColor(render(icon, 96));
+        Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        boolean named = frame && label != null && !label.trim().isEmpty();
+        if (frame) {
+            paint.setShader(new LinearGradient(0, 0, W, H, shade(base, 1.35f), shade(base, 0.6f), Shader.TileMode.CLAMP));
+            c.drawRect(0, 0, W, H, paint);
+            paint.setShader(null);
+            paint.setStyle(Paint.Style.STROKE);
+            paint.setStrokeWidth(3f);
+            paint.setColor(0x73FFFFFF);
+            c.drawRoundRect(new RectF(9, 9, W - 9, H - 9), 14f, 14f, paint);
+            paint.setStyle(Paint.Style.FILL);
+        } else {
+            c.drawColor(shade(base, 1.12f));
+        }
+        int size = (int) (H * (named ? 0.5f : 0.58f));
+        float cy = named ? H * 0.4f : H / 2f;
+        int left = (W - size) / 2, top = (int) (cy - size / 2f);
+        float radius = size * 0.22f;
+        RectF box = new RectF(left, top, left + size, top + size);
+        Paint shadow = new Paint(Paint.ANTI_ALIAS_FLAG);
+        shadow.setColor(base);
+        shadow.setShadowLayer(12f, 0f, 5f, 0x66000000);
+        c.drawRoundRect(box, radius, radius, shadow);
+        Path clip = new Path();
+        clip.addRoundRect(box, radius, radius, Path.Direction.CW);
+        c.save();
+        c.clipPath(clip);
+        icon.setBounds(left, top, left + size, top + size);
+        icon.draw(c);
+        c.restore();
+        if (named) {
+            android.text.TextPaint text = new android.text.TextPaint(Paint.ANTI_ALIAS_FLAG);
+            text.setColor(Color.WHITE);
+            text.setTextSize(23f);
+            text.setTypeface(android.graphics.Typeface.create(android.graphics.Typeface.DEFAULT, android.graphics.Typeface.BOLD));
+            text.setTextAlign(Paint.Align.CENTER);
+            text.setShadowLayer(4f, 0f, 2f, 0x99000000);
+            CharSequence fit = android.text.TextUtils.ellipsize(label.trim(), text, W - 44f, android.text.TextUtils.TruncateAt.END);
+            c.drawText(fit, 0, fit.length(), W / 2f, top + size + 30f, text);
         }
         return new BitmapDrawable(res, out);
     }

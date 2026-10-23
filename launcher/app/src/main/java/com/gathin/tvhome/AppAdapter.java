@@ -302,10 +302,10 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             final int style = Themes.bannerStyle(ctx);
             if (banner == null && iconBanners && style != Themes.BANNER_OFF && card == null) {
                 // sourceDir changes with every update, so a new icon makes a new banner.
-                String cacheKey = component.flattenToShortString() + '\n' + ri.activityInfo.applicationInfo.sourceDir + '\n' + style;
+                String cacheKey = component.flattenToShortString() + '\n' + ri.activityInfo.applicationInfo.sourceDir + '\n' + style + (style == Themes.BANNER_FRAME ? '\n' + label : "");
                 banner = iconBannerCache.get(cacheKey);
                 if (banner == null) {
-                    banner = IconBanner.make(ctx.getResources(), icon, style);
+                    banner = IconBanner.make(ctx.getResources(), icon, style, label);
                     if (banner != null) iconBannerCache.put(cacheKey, banner);
                 }
             }
