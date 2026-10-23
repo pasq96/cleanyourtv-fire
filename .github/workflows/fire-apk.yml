@@ -20,7 +20,8 @@ concurrency:
 
 jobs:
   apk:
-    runs-on: ubuntu-latest
+    # Pinned: ubuntu-latest moves to 26.04, whose image may ship a different Android SDK.
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     env:
       KEYSTORE_B64: ${{ secrets.SIGNING_KEYSTORE_B64 }}
@@ -64,30 +65,32 @@ jobs:
         with:
           path: ~/.android/debug.keystore
           key: fire-debug-keystore
-      - name: No signing key
-        if: env.KEYSTORE_B64 == ''
-        run: echo "::notice::SIGNING_KEYSTORE_B64 not set; signed with the cached debug key"
       - name: Unit tests and release build
         working-directory: launcher
         run: |
           chmod +x gradlew
           ./gradlew --no-daemon testReleaseUnitTest assembleRelease
           cp app/build/outputs/apk/release/app-release.apk "$RUNNER_TEMP/cleanyourtv-fire.apk"
+          # Readable, sortable artifact name: version, build number, commit.
+          VERSION=$(sed -n "s/^ *versionName = '\(.*\)'.*/\1/p" app/build.gradle)
+          NAME="cleanyourtv-fire-${VERSION}-b${GITHUB_RUN_NUMBER}-${GITHUB_SHA::7}.apk"
+          mkdir -p "$RUNNER_TEMP/out" && cp "$RUNNER_TEMP/cleanyourtv-fire.apk" "$RUNNER_TEMP/out/$NAME"
+          echo "APK_NAME=$NAME" >> "$GITHUB_ENV"
       - name: Summary
         run: |
           APK="$RUNNER_TEMP/cleanyourtv-fire.apk"
           SIGNER="$ANDROID_HOME/build-tools/34.0.0/apksigner"
           {
-            echo "### cleanyourtv-fire.apk"
+            echo "### $APK_NAME"
             echo "- size: $(( $(stat -c %s "$APK") / 1024 )) KB"
             echo "- commit: \`${GITHUB_SHA::7}\`"
             echo "- signer: \`$("$SIGNER" verify --print-certs "$APK" | sed -n 's/.*SHA-256 digest: //p' | head -1)\`"
           } >> "$GITHUB_STEP_SUMMARY"
+      # archive: false uploads the bare .apk, named after the file, instead of a zip.
       - uses: actions/upload-artifact@v7
         with:
-          name: cleanyourtv-fire-${{ github.sha }}
-          path: ${{ runner.temp }}/cleanyourtv-fire.apk
-          compression-level: 0   # an APK is already a zip
+          path: ${{ runner.temp }}/out/${{ env.APK_NAME }}
+          archive: false
           retention-days: 30
       # Rolling pre-release, always the last main build: a direct, login-free download of the bare APK.
       - name: Latest release
