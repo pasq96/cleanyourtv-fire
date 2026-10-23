@@ -533,7 +533,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         // rows_below_dock grid rows under it; the rest of the grid stays below until you press Down.
         int rowsBelowDock = cfg.rowsBelowDock;
         // Launcher settings "dock height": each step lifts the dock 40dp, closing the gap under the top buttons.
-        final int lift = Math.min(getSharedPreferences(Config.SETTINGS_NAME, MODE_PRIVATE).getInt("dock_lift", 1), 4) * (int) (40 * density);
+        final int lift = Math.min(getSharedPreferences(Config.SETTINGS_NAME, MODE_PRIVATE).getInt("dock_lift", 1), 3) * (int) (40 * density);
         grid.addOnLayoutChangeListener((v, l, t, r, b, ol, ot, or, ob) -> {
             int h = b - t;
             // Item height follows the tile size, which follows the columns and the rows that must fit (AppAdapter.tileWidthPx).

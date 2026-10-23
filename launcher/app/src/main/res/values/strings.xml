@@ -267,9 +267,8 @@
     <string name="lbl_units">Temperature</string>
     <string name="lbl_lang">Language</string>
     <string name="dock_position">Dock position</string>
-    <string name="dock_pos_0">Lowest</string>
+    <string name="dock_pos_0">None</string>
     <string name="dock_pos_1">Low</string>
     <string name="dock_pos_2">Medium</string>
     <string name="dock_pos_3">High</string>
-    <string name="dock_pos_4">Highest</string>
 </resources>

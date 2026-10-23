@@ -157,8 +157,8 @@ public final class LauncherSettingsActivity extends Activity {
         addToggle(buttons, Pills.SHOW_POWER_KEY, R.string.opt_power, 0, true);
         addPillStyles((LinearLayout) findViewById(R.id.pillsContainer), config);
         addSegmented(findViewById(R.id.segLift), R.string.dock_position, R.string.d_dock_height,
-                new int[]{R.string.dock_pos_0, R.string.dock_pos_1, R.string.dock_pos_2, R.string.dock_pos_3, R.string.dock_pos_4},
-                () -> Math.min(4, choices.getInt("dock_lift", 1)), i -> choices.edit().putInt("dock_lift", i).apply());
+                new int[]{R.string.dock_pos_0, R.string.dock_pos_1, R.string.dock_pos_2, R.string.dock_pos_3},
+                () -> Math.min(3, choices.getInt("dock_lift", 1)), i -> choices.edit().putInt("dock_lift", i).apply());
         addSegmented(findViewById(R.id.segBanner), R.string.lbl_banner, R.string.d_banner,
                 new int[]{R.string.banner_off, R.string.banner_stretch, R.string.banner_gradient},
                 () -> Themes.bannerStyle(this), i -> choices.edit().putInt(Themes.BANNER_STYLE_KEY, i).apply());

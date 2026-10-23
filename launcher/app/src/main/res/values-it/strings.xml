@@ -221,9 +221,8 @@
     <string name="lbl_units">Temperatura</string>
     <string name="lbl_lang">Lingua</string>
     <string name="dock_position">Posizione del dock</string>
-    <string name="dock_pos_0">Minima</string>
+    <string name="dock_pos_0">Nessuna</string>
     <string name="dock_pos_1">Bassa</string>
     <string name="dock_pos_2">Media</string>
     <string name="dock_pos_3">Alta</string>
-    <string name="dock_pos_4">Massima</string>
 </resources>
