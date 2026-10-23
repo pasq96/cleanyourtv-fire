@@ -7,8 +7,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.os.Handler;
-import android.os.Looper;
 import android.os.SystemClock;
 import android.os.UserManager;
 import android.content.pm.PackageManager;
@@ -16,7 +14,6 @@ import android.content.pm.ResolveInfo;
 import android.provider.Settings;
 import android.view.KeyEvent;
 import android.view.accessibility.AccessibilityEvent;
-import android.view.accessibility.AccessibilityNodeInfo;
 import android.widget.Toast;
 
 import java.util.ArrayList;
@@ -67,36 +64,6 @@ public class HomeKeyService extends AccessibilityService {
     static boolean global(int action) {
         HomeKeyService s = live;
         return s != null && s.performGlobalAction(action);
-    }
-
-    /** Entries of the system power menu, by the labels it uses (Italian and English). */
-    static final int POWER_LOCK = 0, POWER_OFF = 1, POWER_RESTART = 2;
-    private static final String[][] POWER_LABELS = {
-            {"blocco", "lock", "standby"}, {"spegni", "power off", "shut down"}, {"riavvia", "restart", "reboot"}};
-
-    /** Opens the system power menu and taps the entry, so the user never sees it asked twice. */
-    static boolean power(int which) {
-        HomeKeyService s = live;
-        if (s == null) return false;
-        if (which == POWER_LOCK && s.performGlobalAction(GLOBAL_ACTION_LOCK_SCREEN)) return true;
-        if (!s.performGlobalAction(GLOBAL_ACTION_POWER_DIALOG)) return false;
-        s.tapPowerEntry(which, 0);
-        return true;
-    }
-
-    private void tapPowerEntry(int which, int attempt) {
-        new Handler(Looper.getMainLooper()).postDelayed(() -> {
-            AccessibilityNodeInfo root = getRootInActiveWindow();
-            if (root != null && !getPackageName().contentEquals(root.getPackageName())) {
-                for (String label : POWER_LABELS[which]) {
-                    for (AccessibilityNodeInfo n : root.findAccessibilityNodeInfosByText(label)) {
-                        while (n != null && !n.isClickable()) n = n.getParent();
-                        if (n != null && n.performAction(AccessibilityNodeInfo.ACTION_CLICK)) return;
-                    }
-                }
-            }
-            if (attempt < 8) tapPowerEntry(which, attempt + 1);   // the dialog may still be opening; otherwise it stays for the user
-        }, 250);
     }
 
     @Override

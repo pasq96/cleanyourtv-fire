@@ -2973,20 +2973,11 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
 
     // ---- launcher settings and module cards -------------------------------------------------------
 
-    /** Power pill: lock, power off or restart, straight away. The choice is tapped in the system power menu for you. */
+    /** Power pill: opens the system power menu (lock, power off, restart) straight away. */
     private void showPowerMenu(View anchor) {
-        View panel = getLayoutInflater().inflate(R.layout.popup_inputs, root, false);
-        LinearLayout rows = panel.findViewById(R.id.rows);
-        PopupWindow popup = glassPopup(panel, (int) (240 * density));
-        addInputRow(rows, popup, R.drawable.ic_lock, getString(R.string.power_lock), -1, () -> power(HomeKeyService.POWER_LOCK));
-        addInputRow(rows, popup, R.drawable.ic_power, getString(R.string.power_off), -1, () -> power(HomeKeyService.POWER_OFF));
-        addInputRow(rows, popup, R.drawable.ic_restart, getString(R.string.power_restart), -1, () -> power(HomeKeyService.POWER_RESTART));
-        dropIn(popup, panel, anchor, getResources().getBoolean(R.bool.rtl_menu_bar) ? Gravity.START : Gravity.END);
-        rows.getChildAt(1).requestFocus();
-    }
-
-    private void power(int which) {
-        if (!PowerActions.run(which)) Toast.makeText(this, R.string.power_unavailable, Toast.LENGTH_LONG).show();
+        if (!HomeKeyService.global(android.accessibilityservice.AccessibilityService.GLOBAL_ACTION_POWER_DIALOG)) {
+            Toast.makeText(this, R.string.power_unavailable, Toast.LENGTH_LONG).show();
+        }
     }
 
     /** top_menu: the gear's dropdown, standing in for the Inputs, Wi-Fi and Settings pills. */
