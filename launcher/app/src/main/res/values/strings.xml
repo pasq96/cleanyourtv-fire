@@ -224,4 +224,13 @@
     <string name="lang_en">English</string>
     <string name="lang_it">Italiano</string>
     <string name="d_lang">App language. System follows the TV.</string>
+    <string name="sec_weather">Weather</string>
+    <string name="weather_key_state">API key: %1$s</string>
+    <string name="weather_city_state">Place: %1$s</string>
+    <string name="weather_unset">not set</string>
+    <string name="weather_set">set</string>
+    <string name="weather_key">OpenWeather API key</string>
+    <string name="weather_city">Place (e.g. Napoli,IT)</string>
+    <string name="d_weather_key">Free key from openweathermap.org. Shows the weather beside the clock.</string>
+    <string name="d_weather_city">City, optionally with country code.</string>
 </resources>

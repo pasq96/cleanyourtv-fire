@@ -178,4 +178,13 @@
     <string name="lang_en">English</string>
     <string name="lang_it">Italiano</string>
     <string name="d_lang">Lingua dell\'app. Sistema segue la TV.</string>
+    <string name="sec_weather">Meteo</string>
+    <string name="weather_key_state">Chiave API: %1$s</string>
+    <string name="weather_city_state">Località: %1$s</string>
+    <string name="weather_unset">non impostata</string>
+    <string name="weather_set">impostata</string>
+    <string name="weather_key">Chiave API OpenWeather</string>
+    <string name="weather_city">Località (es. Napoli,IT)</string>
+    <string name="d_weather_key">Chiave gratuita da openweathermap.org. Mostra il meteo accanto all\'orologio.</string>
+    <string name="d_weather_city">Città, con il codice paese se serve.</string>
 </resources>

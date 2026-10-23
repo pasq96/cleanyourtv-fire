@@ -175,6 +175,8 @@ public final class LauncherSettingsActivity extends Activity {
             changed();
             recreate();
         });
+        findViewById(R.id.weatherKeyChoice).setOnClickListener(v -> askText(Weather.KEY_API, R.string.weather_key));
+        findViewById(R.id.weatherCityChoice).setOnClickListener(v -> askText(Weather.KEY_CITY, R.string.weather_city));
         bannerChoice = findViewById(R.id.bannerChoice);
         bannerChoice.setOnClickListener(v -> {
             choices.edit().putInt(Themes.BANNER_STYLE_KEY, (Themes.bannerStyle(this) + 1) % 3).apply();
@@ -330,6 +332,11 @@ public final class LauncherSettingsActivity extends Activity {
                         : wallpaperCurrent != null ? wallpaperCurrent
                         : getString(R.string.wallpaper_theme_default)));
         followThemeChoice.setSelected(!hasOnTvChoices());
+        String wkey = choices.getString(Weather.KEY_API, "").trim(), wcity = choices.getString(Weather.KEY_CITY, "").trim();
+        ((TextView) findViewById(R.id.weatherKeyChoice)).setText(getString(R.string.weather_key_state,
+                wkey.isEmpty() ? getString(R.string.weather_unset) : getString(R.string.weather_set)));
+        ((TextView) findViewById(R.id.weatherCityChoice)).setText(getString(R.string.weather_city_state,
+                wcity.isEmpty() ? getString(R.string.weather_unset) : wcity));
         int style = Themes.bannerStyle(this);
         bannerChoice.setText(getString(R.string.banner_state, getString(style == Themes.BANNER_STRETCH
                 ? R.string.banner_stretch : style == Themes.BANNER_GRADIENT ? R.string.banner_gradient : R.string.banner_off)));
@@ -358,6 +365,22 @@ public final class LauncherSettingsActivity extends Activity {
                 || choices.contains("animations") || choices.contains("advanced_effects")
                 || choices.contains(Config.WALLPAPER_CHOICE_KEY) || choices.contains(Config.DOCK_OPACITY_KEY)
                 || choices.contains("dock_lift");
+    }
+
+    /** A one-line text entry (API key, place) saved as a choice; the weather cache is dropped so it refreshes. */
+    private void askText(String key, int title) {
+        final android.widget.EditText input = new android.widget.EditText(this);
+        input.setSingleLine(true);
+        input.setText(choices.getString(key, ""));
+        input.setSelection(input.getText().length());
+        new AlertDialog.Builder(this).setTitle(title).setView(input)
+                .setPositiveButton(android.R.string.ok, (d, w) -> {
+                    choices.edit().putString(key, input.getText().toString().trim()).apply();
+                    Weather.forget(this);
+                    changed();
+                    refresh();
+                })
+                .setNegativeButton(android.R.string.cancel, null).show();
     }
 
     /** An on/off row saved as a boolean choice that Config reads under the same key. */

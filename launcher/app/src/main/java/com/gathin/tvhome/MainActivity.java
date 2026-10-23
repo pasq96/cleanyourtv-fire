@@ -246,6 +246,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     private PopupWindow openPopup;
     /** Reorder started for one tile (hold OK, tile menu): ends as soon as it is put down. */
     private boolean singleMove;
+    private View weatherRow;
     private TextView btnVpn, btnLauncher;
     private boolean showNetworkPill = true;
     /** Reorder mode is on (top-bar button). */
@@ -437,6 +438,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             });
         }
         btnWifi = findViewById(R.id.btnWifi);
+        weatherRow = findViewById(R.id.weatherRow);
         shamsiDate = findViewById(R.id.shamsiDate);
         stats = findViewById(R.id.stats);
         raceCalendar = cfg.raceCalendar;
@@ -833,6 +835,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             return;
         }
         askLocationForSsid();
+        updateWeather();
         restartIdleClock();
         promptsPaused = false;
         if (grid.getAdapter() == null) grid.setAdapter(adapter);   // dropped by onTrimMemory
@@ -2352,6 +2355,26 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             }
         });
         root.invalidate();   // a resume that changes nothing on screen still draws once, so the refresh runs
+    }
+
+    /** Header weather (OpenWeather): shows the cached reading at once, refreshes it when older than 30 minutes. */
+    private void updateWeather() {
+        boolean on = Weather.configured(this);
+        showWeather(on ? Weather.cached(this) : null);
+        if (!on) return;
+        if (Weather.fresh(Weather.cached(this))) return;
+        Weather.fetch(this, now -> runOnUiThread(() -> {
+            if (!isDestroyed()) showWeather(now);
+        }));
+    }
+
+    private void showWeather(Weather.Now now) {
+        weatherRow.setVisibility(now == null ? View.GONE : View.VISIBLE);
+        View divider = findViewById(R.id.clockDivider);
+        if (divider != null) divider.setVisibility(now == null && !shamsi ? View.GONE : View.VISIBLE);
+        if (now == null) return;
+        ((TextView) findViewById(R.id.weatherText)).setText(now.city + "  ·  " + now.temp + "°");
+        ((ImageView) findViewById(R.id.weatherIcon)).setImageResource(Weather.icon(now.id, now.night));
     }
 
     /** Android hides the Wi-Fi name without the location permission: ask once, so the pill can show the network name. */
