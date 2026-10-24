@@ -11,6 +11,8 @@ import android.provider.Settings;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Android takes an app's accessibility services off the enabled list when the app is force-stopped (Settings, a
@@ -23,14 +25,19 @@ import java.util.Objects;
 final class ServiceRepair {
     private static final String PREFS = "accessibility_helpers";
 
+    /** Helpers Android has bound in this process. */
+    private static final Set<String> BOUND = ConcurrentHashMap.newKeySet();
+
     private ServiceRepair() {
     }
 
     static void connected(Context context, Class<?> service) {
+        BOUND.add(service.getName());
         prefs(context).edit().putBoolean(service.getName(), true).apply();
     }
 
     static void disconnected(Context context, Class<?> service) {
+        BOUND.remove(service.getName());
         prefs(context).edit().remove(service.getName()).apply();
     }
 
@@ -84,7 +91,17 @@ final class ServiceRepair {
             final String with = updated.toString();
             new Thread(() -> {
                 try {
-                    if (!replaceList(cr, list, with)) return;
+                    String start = list;
+                    if (force) {
+                        // After an update Android usually rebinds the helper by itself; cycling the list then
+                        // would only switch Home off for a couple of seconds. Give it time, and cycle if it didn't.
+                        Thread.sleep(4000);
+                        boolean all = true;
+                        for (ComponentName name : recorded) all &= BOUND.contains(name.getClassName());
+                        if (all) return;
+                        start = Settings.Secure.getString(cr, Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES);
+                    }
+                    if (!replaceList(cr, start, with)) return;
                     Thread.sleep(1000);
                     if (!replaceList(cr, with, without)) return;
                     Thread.sleep(1000);
