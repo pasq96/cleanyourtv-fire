@@ -9,9 +9,6 @@ public final class UpdatedReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         if (!Intent.ACTION_MY_PACKAGE_REPLACED.equals(intent.getAction())) return;
-        if (!Config.load(context).restoreKeyServices) return;
-        // goAsync keeps the fresh process alive while the helper is checked and, if needed, cycled.
-        PendingResult result = goAsync();
-        ServiceRepair.restore(context, true, result::finish);
+        if (Config.load(context).restoreKeyServices) ServiceRepair.restore(context);
     }
 }
