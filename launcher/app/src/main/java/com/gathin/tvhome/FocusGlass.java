@@ -35,8 +35,8 @@ final class FocusGlass extends View {
         halo.setColor(0x24BFE6FF);
     }
 
-    /** Moves to the view (animated when asked and there is somewhere to come from); null hides the glass. */
-    void follow(View to, boolean animate) {
+    /** Moves to the view (gliding for millis, none when 0 or when there is nothing to come from); null hides the glass. */
+    void follow(View to, int millis) {
         if (to == null) {
             if (anim != null) anim.cancel();
             target = null;
@@ -48,13 +48,13 @@ final class FocusGlass extends View {
         start.set(rect);
         target = to;
         setVisibility(VISIBLE);
-        if (fresh || !animate) {
+        if (fresh || millis <= 0) {
             snap();
             return;
         }
         final float[] last = new float[1];
         anim = ValueAnimator.ofFloat(0f, 1f);
-        anim.setDuration(420);
+        anim.setDuration(millis);
         anim.setInterpolator(new OvershootInterpolator(1.0f));
         anim.addUpdateListener(a -> {
             float t = (float) a.getAnimatedValue(), f = a.getAnimatedFraction();

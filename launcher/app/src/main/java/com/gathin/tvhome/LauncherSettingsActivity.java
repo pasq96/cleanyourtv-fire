@@ -61,7 +61,7 @@ public final class LauncherSettingsActivity extends Activity {
                 new android.widget.FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         scroll.setOnScrollChangeListener((v, x, y, ox, oy) -> glass.snap());
         getWindow().getDecorView().getViewTreeObserver().addOnGlobalFocusChangeListener(
-                (oldFocus, now) -> glass.follow(now != null && scroll.findFocus() == now ? now : null, animations));
+                (oldFocus, now) -> glass.follow(now != null && scroll.findFocus() == now ? now : null, glideMillis()));
         choices = getSharedPreferences(Config.SETTINGS_NAME, MODE_PRIVATE);
         Config config = Config.load(this);
         View reorderChoice = findViewById(R.id.reorderChoice);
@@ -207,6 +207,8 @@ public final class LauncherSettingsActivity extends Activity {
                                 R.string.enable, () -> setAdvanced(true));
                     }
                 });
+        addSegmented(findViewById(R.id.segGlide), R.string.lbl_glide, 0, new int[]{R.string.glide_off, R.string.glide_short, R.string.glide_normal},
+                () -> Math.max(0, Math.min(2, choices.getInt("glide_speed", 1))), i -> choices.edit().putInt("glide_speed", i).apply());
         addSegmented(findViewById(R.id.segSort), R.string.lbl_sort, R.string.d_sort, new int[]{R.string.sort_manual, R.string.sort_recent},
                 () -> Themes.sortRecent(this) ? 1 : 0, i -> choices.edit().putBoolean(Themes.SORT_RECENT_KEY, i == 1).apply());
         addSegmented(findViewById(R.id.segUnits), R.string.lbl_units, 0, new int[]{R.string.weather_celsius, R.string.weather_fahrenheit},
@@ -260,7 +262,7 @@ public final class LauncherSettingsActivity extends Activity {
         for (View v : order) {
             if (v.getVisibility() == View.VISIBLE) { v.requestFocus(); break; }
         }
-        scroll.post(() -> glass.follow(getCurrentFocus(), false));
+        scroll.post(() -> glass.follow(getCurrentFocus(), 0));
     }
 
     /**
@@ -339,6 +341,11 @@ public final class LauncherSettingsActivity extends Activity {
         int n = 0;
         for (CharSequence t : texts) n = Math.max(n, t.length());
         return n;
+    }
+
+    /** Length of the focus glide in these settings: none, short or normal (also none while animations are off). */
+    private int glideMillis() {
+        return !animations ? 0 : new int[]{0, 200, 340}[Math.max(0, Math.min(2, choices.getInt("glide_speed", 1)))];
     }
 
     private boolean themePushed() {

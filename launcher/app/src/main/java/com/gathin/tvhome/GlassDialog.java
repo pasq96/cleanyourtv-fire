@@ -80,12 +80,6 @@ final class GlassDialog {
         input.setPadding(p, p, p, p);
         panel.addView(input, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         focusFirst = input;
-        // The remote's Down leaves the field for the buttons (the keyboard would otherwise keep every arrow key).
-        input.setOnKeyListener((v, code, e) -> {
-            if (code != android.view.KeyEvent.KEYCODE_DPAD_DOWN || buttons.getChildCount() == 0) return false;
-            if (e.getAction() == android.view.KeyEvent.ACTION_DOWN) focusButtons();
-            return true;
-        });
         input.setImeOptions(android.view.inputmethod.EditorInfo.IME_ACTION_DONE);
         input.setOnEditorActionListener((v, action, e) -> {
             focusButtons();
@@ -94,10 +88,73 @@ final class GlassDialog {
         return this;
     }
 
-    /** Hides the keyboard and focuses the last button (OK) of a dialog with a text field. */
-    private void focusButtons() {
+    /**
+     * D-pad navigation by lines: every list row, the text field and the whole button row are one line each. Up and
+     * Down move between lines (landing on the nearest button), Left and Right move between buttons. The stock focus
+     * search could not reach the buttons of these dialogs.
+     */
+    private boolean navigate(int code, android.view.KeyEvent e) {
+        boolean vertical = code == android.view.KeyEvent.KEYCODE_DPAD_UP || code == android.view.KeyEvent.KEYCODE_DPAD_DOWN;
+        boolean horizontal = code == android.view.KeyEvent.KEYCODE_DPAD_LEFT || code == android.view.KeyEvent.KEYCODE_DPAD_RIGHT;
+        View focused = dialog.getCurrentFocus();
+        if (!(vertical || horizontal) || focused == null) return false;
+        if (horizontal && focused == input) return false;   // the caret moves inside the text
+        if (e.getAction() != android.view.KeyEvent.ACTION_DOWN) return true;
+        if (horizontal) {
+            if (focused.getParent() != buttons) return true;
+            boolean right = code == android.view.KeyEvent.KEYCODE_DPAD_RIGHT;
+            float from = centerX(focused);
+            View next = null;
+            float gap = Float.MAX_VALUE;
+            for (int i = 0; i < buttons.getChildCount(); i++) {
+                View b = buttons.getChildAt(i);
+                float delta = right ? centerX(b) - from : from - centerX(b);
+                if (b != focused && delta > 1 && delta < gap) { gap = delta; next = b; }
+            }
+            if (next != null) next.requestFocus();
+            return true;
+        }
+        java.util.ArrayList<View> found = new java.util.ArrayList<>();
+        panel.addFocusables(found, View.FOCUS_DOWN);
+        java.util.ArrayList<View> lines = new java.util.ArrayList<>();
+        for (View v : found) {
+            View line = v.getParent() == buttons ? buttons : v;
+            if (v.getVisibility() == View.VISIBLE && !lines.contains(line)) lines.add(line);
+        }
+        View mine = focused.getParent() == buttons ? buttons : focused;
+        int to = lines.indexOf(mine) + (code == android.view.KeyEvent.KEYCODE_DPAD_DOWN ? 1 : -1);
+        if (lines.indexOf(mine) < 0 || to < 0 || to >= lines.size()) return true;
+        View line = lines.get(to);
+        if (line == buttons) {
+            float from = centerX(focused);
+            View best = null;
+            float gap = Float.MAX_VALUE;
+            for (int i = 0; i < buttons.getChildCount(); i++) {
+                View b = buttons.getChildAt(i);
+                float dist = Math.abs(centerX(b) - from);
+                if (dist < gap) { gap = dist; best = b; }
+            }
+            line = best;
+        }
+        if (focused == input) hideKeyboard();
+        if (line != null) line.requestFocus();
+        return true;
+    }
+
+    private static float centerX(View v) {
+        int[] loc = new int[2];
+        v.getLocationOnScreen(loc);
+        return loc[0] + v.getWidth() / 2f;
+    }
+
+    private void hideKeyboard() {
         InputMethodManager imm = (InputMethodManager) ctx.getSystemService(Context.INPUT_METHOD_SERVICE);
         if (imm != null && input != null) imm.hideSoftInputFromWindow(input.getWindowToken(), 0);
+    }
+
+    /** Hides the keyboard and focuses the last button (OK) of a dialog with a text field. */
+    private void focusButtons() {
+        hideKeyboard();
         View ok = buttons.getChildAt(buttons.getChildCount() - 1);
         if (ok != null) ok.requestFocus();
     }
@@ -173,11 +230,6 @@ final class GlassDialog {
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1);
         if (buttons.getChildCount() > 0) lp.setMarginStart((int) (12 * d));
         buttons.addView(b, lp);
-        b.setOnKeyListener((v, code, e) -> {
-            if (input == null || code != android.view.KeyEvent.KEYCODE_DPAD_UP) return false;
-            if (e.getAction() == android.view.KeyEvent.ACTION_DOWN) input.requestFocus();
-            return true;
-        });
         if (focusFirst == null) focusFirst = b;
         return this;
     }
@@ -199,6 +251,10 @@ final class GlassDialog {
         FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams((int) (widthDp * d),
                 tall ? (int) (screenH * 0.86f) : ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.CENTER);
         panel.setClickable(true);
+        // Clickable views count as focusable by default; the backdrop and panel must never take the focus.
+        root.setFocusable(false);
+        panel.setFocusable(false);
+        dialog.setOnKeyListener((d0, code, e) -> navigate(code, e));
         root.addView(panel, lp);
         dialog.setContentView(root);
         Window w = dialog.getWindow();

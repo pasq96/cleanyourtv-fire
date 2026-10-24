@@ -282,4 +282,8 @@
     <string name="wifi_problem_loc">Location is off and the app can\'t turn it on.</string>
     <string name="wifi_problem_hidden">Android hides the network name. Reconnect and retry.</string>
     <string name="lbl_wall_opacity">Wallpaper opacity</string>
+    <string name="lbl_glide">Focus glide</string>
+    <string name="glide_off">None</string>
+    <string name="glide_short">Short</string>
+    <string name="glide_normal">Normal</string>
 </resources>

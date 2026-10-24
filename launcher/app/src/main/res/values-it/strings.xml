@@ -236,4 +236,8 @@
     <string name="wifi_problem_loc">Posizione spenta e l\'app non può attivarla.</string>
     <string name="wifi_problem_hidden">Android nasconde il nome della rete. Riconnettiti e riprova.</string>
     <string name="lbl_wall_opacity">Opacità dello sfondo</string>
+    <string name="lbl_glide">Scorrimento del focus</string>
+    <string name="glide_off">Nessuno</string>
+    <string name="glide_short">Breve</string>
+    <string name="glide_normal">Normale</string>
 </resources>
