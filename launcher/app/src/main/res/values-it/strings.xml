@@ -106,7 +106,6 @@
     <string name="race_live">%1$s · in diretta</string>
     <string name="race_finished">Bandiera a scacchi</string>
     <string name="last_opened">Ultima apertura: %1$s</string>
-    <string name="theme_state">Tema: %1$s</string>
     <string name="theme_state_file">Tema da config.json caricato (eliminalo per sceglierlo qui)</string>
     <string name="theme_fire">Fire (dock Stremio, SmartTube, Sparkle)</string>
     <string name="theme_clean">Pulito (nero, 6 colonne)</string>
@@ -183,9 +182,9 @@
     <string name="weather_unset">non impostata</string>
     <string name="weather_set">impostata</string>
     <string name="weather_key">Chiave API OpenWeather</string>
-    <string name="weather_city">Località (es. Napoli,IT)</string>
+    <string name="weather_city">Località (es. Napoli, IT)</string>
     <string name="d_weather_key">Chiave gratuita da openweathermap.org. Mostra il meteo accanto all\'orologio.</string>
-    <string name="d_weather_city">Città con codice paese. Il testo tra parentesi è solo mostrato: Poggiomarino (NA),IT.</string>
+    <string name="d_weather_city">Città con codice paese. Il testo tra parentesi è solo mostrato: Poggiomarino (NA), IT.</string>
     <string name="sec_grid">Griglia</string>
     <string name="weather_units_state">Temperatura: %1$s</string>
     <string name="weather_celsius">Celsius</string>
@@ -227,7 +226,7 @@
     <string name="d_inputs">Compare solo se la TV ha sorgenti a cui passare (HDMI, antenna, Live TV). Senza, come su una Fire TV Stick, resta nascosto.</string>
     <string name="home_fire_note">Non su Fire OS: Amazon tiene Home. CleanYourTV lo intercetta col servizio di accessibilità.</string>
     <string name="lbl_daily">Sfondo del giorno</string>
-    <string name="d_daily">Una nuova immagine ogni giorno, scaricata una volta all\'apertura della Home. Picsum: una foto che cambia con la data. Bing: l\'immagine del giorno di Bing.</string>
+    <string name="d_daily">Una nuova immagine ogni giorno, scaricata aprendo la Home.</string>
     <string name="daily_off">spento</string>
     <string name="daily_picsum">Picsum</string>
     <string name="daily_bing">Bing</string>
@@ -236,4 +235,5 @@
     <string name="wifi_problem_perm">Il nome Wi-Fi richiede il permesso di posizione, non concesso.</string>
     <string name="wifi_problem_loc">Posizione spenta e l\'app non può attivarla.</string>
     <string name="wifi_problem_hidden">Android nasconde il nome della rete. Riconnettiti e riprova.</string>
+    <string name="lbl_wall_opacity">Opacità dello sfondo</string>
 </resources>

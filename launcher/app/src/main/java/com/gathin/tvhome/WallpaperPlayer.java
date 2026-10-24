@@ -43,6 +43,8 @@ final class WallpaperPlayer {
     private final int dimColor;
     /** The picture on screen, released once the next one has been drawn. */
     private Bitmap current;
+    /** Wallpaper opacity in percent (Launcher settings); below 100 the Home colour shows through. */
+    private final int opacity;
     private boolean active;
     private boolean closed;
     private boolean loading;
@@ -73,6 +75,9 @@ final class WallpaperPlayer {
         image = new ImageView(context);
         image.setScaleType(ImageView.ScaleType.CENTER_CROP);
         image.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+        opacity = Math.max(0, Math.min(100, context.getSharedPreferences(Config.SETTINGS_NAME, Context.MODE_PRIVATE)
+                .getInt(Config.WALLPAPER_OPACITY_KEY, 100)));
+        image.setAlpha(opacity / 100f);
         names = config.wallpaperCaptions && config.wallpaperEnabled && !files.isEmpty()
                 ? WallpaperCaptions.read(files.get(0).getParentFile()) : Collections.emptyMap();
         caption = names.isEmpty() ? null : makeCaption(context, root);
@@ -97,7 +102,7 @@ final class WallpaperPlayer {
             if (bitmap != null) {
                 show(bitmap);
                 // The picture covers the whole screen: the root's plain colour under it is overdraw.
-                root.setBackground(null);
+                if (opacity == 100) root.setBackground(null);
                 displayed = first.getName();
                 showCaption(false);
                 if (!displayed.equals(previous)) {

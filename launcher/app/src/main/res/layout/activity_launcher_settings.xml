@@ -1,9 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Generated layout: glass section cards, inline segmented choices, notes only where a row needs one. -->
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/settingsRoot"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/settings_bg"
+    android:background="@drawable/settings_bg">
+
+<com.gathin.tvhome.GlassScrollView
+    android:id="@+id/settingsScroll"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
     android:fillViewport="true">
 
     <LinearLayout
@@ -37,14 +43,10 @@
         <LinearLayout
             style="@style/SettingsCard">
             <LinearLayout
-                style="@style/SettingsBlock">
-                <TextView
-                    android:id="@+id/themeChoice"
-                    style="@style/SettingsRow" />
-                <TextView
-                    style="@style/SettingsNote"
-                    android:text="@string/d_theme" />
-            </LinearLayout>
+                android:id="@+id/segTheme"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
             <LinearLayout
                 style="@style/SettingsBlock">
                 <TextView
@@ -56,6 +58,11 @@
             </LinearLayout>
             <LinearLayout
                 android:id="@+id/segDaily"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
+            <LinearLayout
+                android:id="@+id/segWallOpacity"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical" />
@@ -317,4 +324,6 @@
             </LinearLayout>
         </LinearLayout>
     </LinearLayout>
-</ScrollView>
+</com.gathin.tvhome.GlassScrollView>
+
+</FrameLayout>

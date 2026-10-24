@@ -45,7 +45,7 @@ final class Weather {
     }
 
     static String query(String place) {
-        return place.replaceAll("\\s*\\([^)]*\\)", "");
+        return place.replaceAll("\\s*\\([^)]*\\)", "").replaceAll("\\s*,\\s*", ",");
     }
 
     /** "Comune di Poggiomarino" reads as "Poggiomarino". */

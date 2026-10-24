@@ -40,7 +40,7 @@ final class Config {
     static final String ROWS_BELOW_DOCK_KEY = "rows_below_dock";
     static final String VPN_APP_KEY = "vpn_app";
     static final String WALLPAPER_CHOICE_KEY = "wallpaper_choice";
-    static final String DOCK_OPACITY_KEY = "dock_opacity";
+    static final String DOCK_OPACITY_KEY = "dock_opacity", WALLPAPER_OPACITY_KEY = "wallpaper_opacity";
     /**
      * Counts the changes made in Launcher settings. Home remembers the count it was built with and rebuilds on
      * resume when it differs, however the settings were left (see MainActivity#onResume).

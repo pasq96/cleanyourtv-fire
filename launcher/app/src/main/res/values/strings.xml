@@ -152,7 +152,6 @@
     <!-- Cinematic top shelf (cinematic_home): the line under the focused dock app's name; %1$s is when it was
          last opened, e.g. "5 minutes ago" or "yesterday, 9:40 pm". -->
     <string name="last_opened">Last opened %1$s</string>
-    <string name="theme_state">Theme: %1$s</string>
     <string name="theme_state_file">Theme set by a pushed config.json (delete it to choose here)</string>
     <string name="theme_fire">Fire (dock Stremio, SmartTube, Sparkle)</string>
     <string name="theme_clean">Clean (black, 6 columns)</string>
@@ -229,9 +228,9 @@
     <string name="weather_unset">not set</string>
     <string name="weather_set">set</string>
     <string name="weather_key">OpenWeather API key</string>
-    <string name="weather_city">Place (e.g. Napoli,IT)</string>
+    <string name="weather_city">Place (e.g. Napoli, IT)</string>
     <string name="d_weather_key">Free key from openweathermap.org. Shows the weather beside the clock.</string>
-    <string name="d_weather_city">Place, optionally with country code. Text in brackets is only shown: Poggiomarino (NA),IT.</string>
+    <string name="d_weather_city">Place, optionally with country code. Text in brackets is only shown: Poggiomarino (NA), IT.</string>
     <string name="sec_grid">Grid</string>
     <string name="weather_units_state">Temperature: %1$s</string>
     <string name="weather_celsius">Celsius</string>
@@ -273,7 +272,7 @@
     <string name="d_inputs">Only appears when the TV has sources to switch to (HDMI, antenna, Live TV). Without any, such as on a Fire TV Stick, it stays hidden.</string>
     <string name="home_fire_note">Not on Fire OS: Amazon keeps Home. CleanYourTV intercepts it via its accessibility service.</string>
     <string name="lbl_daily">Daily wallpaper</string>
-    <string name="d_daily">A new picture each day, downloaded once when Home opens. Picsum: a photo that changes with the date. Bing: the Bing picture of the day.</string>
+    <string name="d_daily">A new picture each day, fetched when Home opens.</string>
     <string name="daily_off">off</string>
     <string name="daily_picsum">Picsum</string>
     <string name="daily_bing">Bing</string>
@@ -282,4 +281,5 @@
     <string name="wifi_problem_perm">Wi-Fi name needs the location permission, not granted.</string>
     <string name="wifi_problem_loc">Location is off and the app can\'t turn it on.</string>
     <string name="wifi_problem_hidden">Android hides the network name. Reconnect and retry.</string>
+    <string name="lbl_wall_opacity">Wallpaper opacity</string>
 </resources>

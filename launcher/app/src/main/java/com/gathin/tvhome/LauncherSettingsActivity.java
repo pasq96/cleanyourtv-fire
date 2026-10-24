@@ -34,7 +34,8 @@ public final class LauncherSettingsActivity extends Activity {
     private TextView wallpaperChoice;
     private View advancedBlock;
     private TextView followThemeChoice;
-    private TextView themeChoice;
+    private GlassScrollView scroll;
+    private FocusGlass glass;
     private TextView vpnChoice;
     private final List<Runnable> toggleRefreshers = new ArrayList<>();
     private int columns;
@@ -54,6 +55,13 @@ public final class LauncherSettingsActivity extends Activity {
     protected void onCreate(Bundle state) {
         super.onCreate(state);
         setContentView(R.layout.activity_launcher_settings);
+        scroll = findViewById(R.id.settingsScroll);
+        glass = new FocusGlass(this);
+        ((android.widget.FrameLayout) findViewById(R.id.settingsRoot)).addView(glass,
+                new android.widget.FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        scroll.setOnScrollChangeListener((v, x, y, ox, oy) -> glass.snap());
+        getWindow().getDecorView().getViewTreeObserver().addOnGlobalFocusChangeListener(
+                (oldFocus, now) -> glass.follow(now != null && scroll.findFocus() == now ? now : null, animations));
         choices = getSharedPreferences(Config.SETTINGS_NAME, MODE_PRIVATE);
         Config config = Config.load(this);
         View reorderChoice = findViewById(R.id.reorderChoice);
@@ -165,6 +173,20 @@ public final class LauncherSettingsActivity extends Activity {
         addSegmented(findViewById(R.id.segLift), R.string.dock_position, R.string.d_dock_height,
                 new int[]{R.string.dock_pos_0, R.string.dock_pos_1, R.string.dock_pos_2, R.string.dock_pos_3},
                 () -> Math.min(3, choices.getInt("dock_lift", 1)), i -> choices.edit().putInt("dock_lift", i).apply());
+        addPicker(findViewById(R.id.segTheme), R.string.theme_title, R.string.d_theme, themeNames(false), themeNames(true),
+                () -> Arrays.asList(Themes.IDS).indexOf(Themes.chosen(choices, FireOs.is(this))), i -> {
+                    // The new theme's layout applies: drop on-TV choices made over the old one.
+                    choices.edit().putString(Themes.KEY, Themes.IDS[i]).remove("columns").remove(Config.ROWS_BELOW_DOCK_KEY)
+                            .remove("animations").remove("advanced_effects").remove(Config.WALLPAPER_CHOICE_KEY)
+                            .remove(Config.DOCK_OPACITY_KEY).remove("show_all_apps").remove("long_press_move")
+                            .remove("always_show_names").remove("show_inputs_pill").remove("show_network_pill").remove("dock_lift")
+                            .remove(DailyWallpaper.SOURCE_KEY).commit();
+                    changed();
+                    recreate();   // rows and toggles take the new theme's defaults
+                }, () -> themePushed() ? R.string.theme_state_file : 0);
+        addSegmented(findViewById(R.id.segWallOpacity), R.string.lbl_wall_opacity, 0, new CharSequence[]{"0%", "25%", "50%", "75%", "100%"},
+                () -> Math.max(0, Math.min(4, Math.round(choices.getInt(Config.WALLPAPER_OPACITY_KEY, 100) / 25f))),
+                i -> choices.edit().putInt(Config.WALLPAPER_OPACITY_KEY, i * 25).apply());
         addPicker(findViewById(R.id.segBanner), R.string.lbl_banner, R.string.d_banner,
                 new int[]{R.string.banner_off, R.string.banner_stretch, R.string.banner_gradient, R.string.banner_blur, R.string.banner_glass,
                         R.string.banner_solid, R.string.banner_frame},
@@ -210,8 +232,6 @@ public final class LauncherSettingsActivity extends Activity {
             Toast.makeText(this, ok ? R.string.restore_done : R.string.restore_failed, Toast.LENGTH_LONG).show();
             if (ok) { setResult(RESULT_OK); recreate(); }
         });
-        themeChoice = findViewById(R.id.themeChoice);
-        themeChoice.setOnClickListener(v -> pickTheme());
         followThemeChoice = findViewById(R.id.followThemeChoice);
         followThemeChoice.setOnClickListener(v -> {
             if (!hasOnTvChoices()) return;
@@ -235,8 +255,12 @@ public final class LauncherSettingsActivity extends Activity {
         findViewById(R.id.tvSettingsChoice).setOnClickListener(v ->
                 open(SystemSettings.intent(this, Settings.ACTION_SETTINGS)));
         refresh();
-        if (config.launcherSettingsButton) reorderChoice.requestFocus();
-        else columnChoices[Math.max(0, Math.min(columns - 4, columnChoices.length - 1))].requestFocus();
+        ArrayList<View> order = new ArrayList<>();
+        findViewById(android.R.id.content).addFocusables(order, View.FOCUS_DOWN);
+        for (View v : order) {
+            if (v.getVisibility() == View.VISIBLE) { v.requestFocus(); break; }
+        }
+        scroll.post(() -> glass.follow(getCurrentFocus(), false));
     }
 
     /**
@@ -252,14 +276,21 @@ public final class LauncherSettingsActivity extends Activity {
         View focused = getCurrentFocus();
         if (!(vertical || horizontal) || focused == null) return super.dispatchKeyEvent(event);
         if (event.getAction() != android.view.KeyEvent.ACTION_DOWN) return true;
-        if (horizontal) {
-            super.dispatchKeyEvent(event);
-            View now = getCurrentFocus();
-            if (now != null && now != focused && now.getParent() != focused.getParent()) focused.requestFocus();
-            return true;
-        }
         ArrayList<View> all = new ArrayList<>();
         findViewById(android.R.id.content).addFocusables(all, View.FOCUS_DOWN);
+        if (horizontal) {
+            boolean right = code == android.view.KeyEvent.KEYCODE_DPAD_RIGHT;
+            float from = centerX(focused);
+            View next = null;
+            float gap = Float.MAX_VALUE;
+            for (View v : all) {
+                if (v == focused || v.getParent() != focused.getParent() || v.getVisibility() != View.VISIBLE) continue;
+                float delta = right ? centerX(v) - from : from - centerX(v);
+                if (delta > 1 && delta < gap) { gap = delta; next = v; }
+            }
+            if (next != null) next.requestFocus();
+            return true;
+        }
         List<android.view.ViewParent> groups = new ArrayList<>();
         for (View v : all) if (v.getVisibility() == View.VISIBLE && !groups.contains(v.getParent())) groups.add(v.getParent());
         int at = groups.indexOf(focused.getParent());
@@ -276,8 +307,53 @@ public final class LauncherSettingsActivity extends Activity {
             float distance = Math.abs(loc[0] + v.getWidth() / 2f - cx);
             if (distance < bestDistance) { bestDistance = distance; best = v; }
         }
-        if (best != null) best.requestFocus();
+        if (best != null) {
+            best.requestFocus();
+            reveal(best, to == 0);
+        }
         return true;
+    }
+
+    private static float centerX(View v) {
+        int[] loc = new int[2];
+        v.getLocationOnScreen(loc);
+        return loc[0] + v.getWidth() / 2f;
+    }
+
+    /** Scrolls smoothly so the focused row shows with the heading and note above it; the first row goes back to the very top. */
+    private void reveal(View v, boolean toTop) {
+        if (toTop) {
+            scroll.smoothScrollTo(0, 0);
+            return;
+        }
+        int[] a = new int[2], b = new int[2];
+        v.getLocationOnScreen(a);
+        scroll.getLocationOnScreen(b);
+        int margin = (int) (110 * getResources().getDisplayMetrics().density);
+        int top = a[1] - b[1], bottom = top + v.getHeight(), height = scroll.getHeight();
+        if (top < margin) scroll.smoothScrollBy(0, top - margin);
+        else if (bottom > height - margin) scroll.smoothScrollBy(0, bottom - (height - margin));
+    }
+
+    private static int widest(CharSequence[] texts) {
+        int n = 0;
+        for (CharSequence t : texts) n = Math.max(n, t.length());
+        return n;
+    }
+
+    private boolean themePushed() {
+        File dir = Config.dir(this);
+        return dir != null && new File(dir, Config.FILE_NAME).isFile();
+    }
+
+    /** Theme names: the full line, or just the name before its parentheses for the compact value. */
+    private CharSequence[] themeNames(boolean shortForm) {
+        CharSequence[] out = new CharSequence[Themes.IDS.length];
+        for (int i = 0; i < out.length; i++) {
+            String n = getString(Themes.label(Themes.IDS[i]));
+            out[i] = shortForm ? n.replaceFirst("\\s*\\(.*$", "") : n;
+        }
+        return out;
     }
 
     private boolean locationGranted() {
@@ -312,36 +388,6 @@ public final class LauncherSettingsActivity extends Activity {
         LinearLayout row = (LinearLayout) views[0].getParent();
         row.removeAllViews();
         for (int i = views.length - 1; i >= 0; i--) row.addView(views[i]);
-    }
-
-    /** The themes as a list, like the other pickers; a theme pushed as a file keeps priority, as before. */
-    private void pickTheme() {
-        File pushedDir = Config.dir(this);
-        if (pushedDir != null && new File(pushedDir, Config.FILE_NAME).isFile()) {
-            Toast.makeText(this, R.string.theme_state_file, Toast.LENGTH_LONG).show();
-            return;
-        }
-        String current = Themes.chosen(choices, FireOs.is(this));
-        CharSequence[] labels = new CharSequence[Themes.IDS.length];
-        boolean[] on = new boolean[labels.length];
-        for (int i = 0; i < labels.length; i++) {
-            labels[i] = getString(Themes.label(Themes.IDS[i]));
-            on[i] = Themes.IDS[i].equals(current);
-        }
-        new GlassDialog(this, getString(R.string.theme_title)).width(620)
-                .list(labels, on, false, which -> {
-                    if (Themes.IDS[which].equals(current)) return;
-                    // The new theme's layout applies: drop on-TV choices made over the old one.
-                    choices.edit().putString(Themes.KEY, Themes.IDS[which]).remove("columns").remove(Config.ROWS_BELOW_DOCK_KEY)
-                            .remove("animations").remove("advanced_effects").remove(Config.WALLPAPER_CHOICE_KEY)
-                            .remove(Config.DOCK_OPACITY_KEY).remove("show_all_apps").remove("long_press_move")
-                            .remove("always_show_names").remove("show_inputs_pill").remove("show_network_pill").remove("dock_lift")
-                    .remove(DailyWallpaper.SOURCE_KEY).commit();
-                    changed();
-                    recreate();   // rows and toggles take the new theme's defaults
-                })
-                .button(android.R.string.cancel, null)
-                .show();
     }
 
     private void showWallpaperPicker() {
@@ -436,11 +482,6 @@ public final class LauncherSettingsActivity extends Activity {
         for (String pkg : vpns.split(",")) if (!pkg.trim().isEmpty()) names.add(AppActions.label(this, pkg.trim()));
         vpnChoice.setText(getString(R.string.vpn_state, names.isEmpty() ? getString(R.string.vpn_none)
                 : android.text.TextUtils.join(", ", names)));
-        File dir = Config.dir(this);
-        boolean pushed = dir != null && new File(dir, Config.FILE_NAME).isFile();
-        String name = getString(Themes.label(Themes.chosen(choices, FireOs.is(this))));
-        themeChoice.setText(pushed ? getString(R.string.theme_state_file)
-                : getString(R.string.theme_state, name));
     }
 
     private boolean hasOnTvChoices() {
@@ -466,6 +507,17 @@ public final class LauncherSettingsActivity extends Activity {
      */
     private View addSegmented(LinearLayout parent, int label, int note, int[] options,
                               java.util.function.IntSupplier current, java.util.function.IntConsumer set) {
+        return addSegmented(parent, label, note, texts(options), current, set);
+    }
+
+    private CharSequence[] texts(int[] ids) {
+        CharSequence[] out = new CharSequence[ids.length];
+        for (int i = 0; i < ids.length; i++) out[i] = getString(ids[i]);
+        return out;
+    }
+
+    private View addSegmented(LinearLayout parent, int label, int note, CharSequence[] options,
+                              java.util.function.IntSupplier current, java.util.function.IntConsumer set) {
         float d = getResources().getDisplayMetrics().density;
         LinearLayout block = new LinearLayout(this);
         block.setOrientation(LinearLayout.HORIZONTAL);
@@ -488,7 +540,7 @@ public final class LauncherSettingsActivity extends Activity {
         for (int i = 0; i < options.length; i++) {
             final int index = i;
             segs[i] = new TextView(this, null, 0, R.style.SettingsSeg);
-            String option = getString(options[i]);
+            String option = options[i].toString();
             segs[i].setText(option.substring(0, 1).toUpperCase() + option.substring(1));
             segs[i].setOnClickListener(v -> {
                 if (current.getAsInt() == index) return;
@@ -509,6 +561,13 @@ public final class LauncherSettingsActivity extends Activity {
     /** One setting with many options: the label and the current choice, which opens a glass list. */
     private void addPicker(LinearLayout parent, int label, int note, int[] options,
                            java.util.function.IntSupplier current, java.util.function.IntConsumer set) {
+        CharSequence[] names = texts(options);
+        addPicker(parent, label, note, names, names, current, set, null);
+    }
+
+    /** full: the list rows; shown: the short value on the capsule; lock returns a message id while the choice is fixed elsewhere, else 0. */
+    private void addPicker(LinearLayout parent, int label, int note, CharSequence[] options, CharSequence[] shown,
+                           java.util.function.IntSupplier current, java.util.function.IntConsumer set, java.util.function.IntSupplier lock) {
         float d = getResources().getDisplayMetrics().density;
         LinearLayout block = new LinearLayout(this);
         block.setOrientation(LinearLayout.HORIZONTAL);
@@ -530,14 +589,19 @@ public final class LauncherSettingsActivity extends Activity {
         TextView value = new TextView(this, null, 0, R.style.SettingsSeg);
         value.setSelected(true);
         value.setOnClickListener(v -> {
+            int locked = lock == null ? 0 : lock.getAsInt();
+            if (locked != 0) {
+                Toast.makeText(this, locked, Toast.LENGTH_LONG).show();
+                return;
+            }
             CharSequence[] labels = new CharSequence[options.length];
             boolean[] on = new boolean[options.length];
             for (int i = 0; i < options.length; i++) {
-                String o = getString(options[i]);
+                String o = options[i].toString();
                 labels[i] = o.substring(0, 1).toUpperCase() + o.substring(1);
                 on[i] = i == current.getAsInt();
             }
-            new GlassDialog(this, getString(label)).width(480)
+            new GlassDialog(this, getString(label)).width(widest(options) > 14 ? 620 : 480)
                     .list(labels, on, false, which -> {
                         if (which == current.getAsInt()) return;
                         set.accept(which);
@@ -550,7 +614,8 @@ public final class LauncherSettingsActivity extends Activity {
         capsule.addView(value, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, (int) (44 * d)));
         block.addView(capsule, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         toggleRefreshers.add(() -> {
-            String o = getString(options[Math.max(0, Math.min(options.length - 1, current.getAsInt()))]);
+            String o = (lock != null && lock.getAsInt() != 0) ? "config.json"
+                    : shown[Math.max(0, Math.min(shown.length - 1, current.getAsInt()))].toString();
             value.setText(o.substring(0, 1).toUpperCase() + o.substring(1) + "  \u25BE");
         });
         parent.addView(block, blockLp);

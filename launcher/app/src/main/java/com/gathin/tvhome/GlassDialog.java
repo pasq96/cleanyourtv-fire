@@ -80,7 +80,26 @@ final class GlassDialog {
         input.setPadding(p, p, p, p);
         panel.addView(input, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         focusFirst = input;
+        // The remote's Down leaves the field for the buttons (the keyboard would otherwise keep every arrow key).
+        input.setOnKeyListener((v, code, e) -> {
+            if (code != android.view.KeyEvent.KEYCODE_DPAD_DOWN || buttons.getChildCount() == 0) return false;
+            if (e.getAction() == android.view.KeyEvent.ACTION_DOWN) focusButtons();
+            return true;
+        });
+        input.setImeOptions(android.view.inputmethod.EditorInfo.IME_ACTION_DONE);
+        input.setOnEditorActionListener((v, action, e) -> {
+            focusButtons();
+            return true;
+        });
         return this;
+    }
+
+    /** Hides the keyboard and focuses the last button (OK) of a dialog with a text field. */
+    private void focusButtons() {
+        InputMethodManager imm = (InputMethodManager) ctx.getSystemService(Context.INPUT_METHOD_SERVICE);
+        if (imm != null && input != null) imm.hideSoftInputFromWindow(input.getWindowToken(), 0);
+        View ok = buttons.getChildAt(buttons.getChildCount() - 1);
+        if (ok != null) ok.requestFocus();
     }
 
     String text() {
@@ -154,6 +173,11 @@ final class GlassDialog {
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1);
         if (buttons.getChildCount() > 0) lp.setMarginStart((int) (12 * d));
         buttons.addView(b, lp);
+        b.setOnKeyListener((v, code, e) -> {
+            if (input == null || code != android.view.KeyEvent.KEYCODE_DPAD_UP) return false;
+            if (e.getAction() == android.view.KeyEvent.ACTION_DOWN) input.requestFocus();
+            return true;
+        });
         if (focusFirst == null) focusFirst = b;
         return this;
     }
