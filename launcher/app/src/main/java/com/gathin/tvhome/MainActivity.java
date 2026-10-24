@@ -290,6 +290,13 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         public void onLost(@NonNull Network network) {
             handler.post(MainActivity.this::updateWifiLabel);
         }
+
+        /** Android validates a link (a real Internet connection) a moment after it appears; signal changes land here too, so coalesce. */
+        @Override
+        public void onCapabilitiesChanged(@NonNull Network network, @NonNull NetworkCapabilities caps) {
+            handler.removeCallbacks(MainActivity.this::updateWifiLabel);
+            handler.postDelayed(MainActivity.this::updateWifiLabel, 600);
+        }
     };
     /** Shows the Inputs pill once the TV registers an input: at boot HDMI inputs can appear after Home is shown. */
     private final TvInputManager.TvInputCallback inputCallback = new TvInputManager.TvInputCallback() {
@@ -2424,7 +2431,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         boolean steady = false;
         try {
             ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-            boolean wifi = false, ethernet = false;
+            boolean wifi = false, ethernet = false, ethernetWorks = false;
             // All networks, not just the active one: with a VPN up the active network is the VPN itself.
             for (Network net : cm != null ? cm.getAllNetworks() : new Network[0]) {
                 NetworkCapabilities caps = cm.getNetworkCapabilities(net);
@@ -2435,13 +2442,16 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
                 }
                 if (!caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)) continue;
                 online = true;
-                if (caps.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)) ethernet = true;
+                if (caps.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)) {
+                    ethernet = true;
+                    ethernetWorks |= caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED);
+                }
                 if (caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) wifi = true;
             }
             if (!online) {
                 text = getString(R.string.offline);
                 vpn = false;
-            } else if (ethernet) {
+            } else if (ethernet && (ethernetWorks || !wifi)) {   // a cable without a working link yields to Wi-Fi
                 text = getString(R.string.ethernet);
                 icon = R.drawable.ic_ethernet;
                 flame = 4;
