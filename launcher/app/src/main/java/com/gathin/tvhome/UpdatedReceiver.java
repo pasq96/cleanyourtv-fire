@@ -9,6 +9,6 @@ public final class UpdatedReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         if (!Intent.ACTION_MY_PACKAGE_REPLACED.equals(intent.getAction())) return;
-        if (Config.load(context).restoreKeyServices) ServiceRepair.restore(context);
+        if (Config.load(context).restoreKeyServices) ServiceRepair.restore(context, true);
     }
 }
