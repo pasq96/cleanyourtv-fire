@@ -42,13 +42,18 @@ final class ServiceRepair {
     }
 
     static void restore(Context context) {
-        restore(context, false);
+        restore(context, false, null);
     }
 
     /** force: run the add, remove, add cycle even when every helper is on the list (after an update Android may still hold it as crashed). */
-    static void restore(Context context, boolean force) {
+    static void restore(Context context, boolean force, Runnable done) {
+        if (!run(context, force, done) && done != null) done.run();
+    }
+
+    /** True when a thread took over {@code done}. */
+    private static boolean run(Context context, boolean force, Runnable done) {
         if (context.checkSelfPermission(Manifest.permission.WRITE_SECURE_SETTINGS)
-                != PackageManager.PERMISSION_GRANTED) return;
+                != PackageManager.PERMISSION_GRANTED) return false;
         try {
             ContentResolver cr = context.getContentResolver();
             String list = Settings.Secure.getString(cr, Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES);
@@ -63,7 +68,7 @@ final class ServiceRepair {
             for (String service : prefs(context).getAll().keySet()) {
                 recorded.add(new ComponentName(context.getPackageName(), service));
             }
-            if (recorded.isEmpty()) return;
+            if (recorded.isEmpty()) return false;
             // The list without our recorded helpers, then with all of them.
             StringBuilder others = new StringBuilder();
             for (ComponentName name : enabled) {
@@ -78,7 +83,7 @@ final class ServiceRepair {
                 if (updated.length() > 0) updated.append(':');
                 updated.append(name.flattenToShortString());
             }
-            if (!missing && !force) return;
+            if (!missing && !force) return false;
             // A killed helper also lands on Android's "Crashed services" list (dumpsys accessibility), and a
             // crashed service is never bound again, so putting it back on the list alone binds nothing and the
             // switch falls back to 0 (Hisense songshan, Android 11, whose standby kills third-party apps). Android
@@ -95,7 +100,7 @@ final class ServiceRepair {
                     if (force) {
                         // After an update Android usually rebinds the helper by itself; cycling the list then
                         // would only switch Home off for a couple of seconds. Give it time, and cycle if it didn't.
-                        Thread.sleep(4000);
+                        Thread.sleep(3000);
                         boolean all = true;
                         for (ComponentName name : recorded) all &= BOUND.contains(name.getClassName());
                         if (all) return;
@@ -109,10 +114,14 @@ final class ServiceRepair {
                     Settings.Secure.putInt(cr, Settings.Secure.ACCESSIBILITY_ENABLED, 1);
                 } catch (RuntimeException | InterruptedException ignored) {
                     // The setting is the system's; a refusal leaves the helper off, as before.
+                } finally {
+                    if (done != null) done.run();
                 }
             }, "ServiceRepair").start();
+            return true;
         } catch (RuntimeException ignored) {
             // The setting is the system's; a refusal leaves the helper off, as before.
+            return false;
         }
     }
 
