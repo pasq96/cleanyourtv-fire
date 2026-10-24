@@ -184,8 +184,13 @@ final class Config {
     final boolean iconBanners;
     /** Shape of the glow behind the focused app (config.xml, glow_style): {@link #GLOW_RADIAL} or {@link #GLOW_HORIZON}. */
     final String glowStyle;
+    /** The focus highlight's look (config.xml glass_style, or the on-TV choice): one of the GLASS_* names. */
+    final String glassStyle;
 
     static final String GLOW_RADIAL = "radial", GLOW_HORIZON = "horizon";
+    static final String GLASS_DEFAULT = "glass", GLASS_RIM = "rim", GLASS_HALO = "halo", GLASS_SOFT = "soft", GLASS_NEON = "neon";
+    static final String[] GLASS_STYLES = {GLASS_DEFAULT, GLASS_SOFT, GLASS_RIM, GLASS_HALO, GLASS_NEON};
+    static final String GLASS_STYLE_KEY = "glass_style";
     /** Show each rotating wallpaper's name from wallpapers/captions.txt (config.xml / theme wallpaper_captions). */
     final boolean wallpaperCaptions;
     /** Answer VIEW_INPUTS with the Inputs menu (handle_view_inputs); see InputsRequestActivity. */
@@ -206,7 +211,7 @@ final class Config {
                    List<RaceWeekend.Race> raceCalendar, boolean cinematicHome, boolean ambientGlow, boolean appGlow, int homeIdleClockMinutes,
                    boolean keyFilter, boolean dockGlass, String glowStyle, boolean wallpaperCaptions,
                    boolean handleViewInputs, boolean tileMenu, boolean dockEvenPadding,
-                   boolean showAllApps, boolean longPressMove, boolean iconBanners) {
+                   boolean showAllApps, boolean longPressMove, boolean iconBanners, String glassStyle) {
         this.handleViewInputs = handleViewInputs;
         this.tileMenu = tileMenu;
         this.inputKeycodes = inputKeycodes;
@@ -282,6 +287,14 @@ final class Config {
         this.iconBanners = iconBanners;
         this.glowStyle = glowStyle(glowStyle);
         this.wallpaperCaptions = wallpaperCaptions;
+        this.glassStyle = glassStyle(glassStyle);
+    }
+
+    /** A known glass_style name in any case, or glass (the default) for anything else. */
+    static String glassStyle(String value) {
+        String v = value == null ? "" : value.trim();
+        for (String known : GLASS_STYLES) if (known.equalsIgnoreCase(v)) return known;
+        return GLASS_DEFAULT;
     }
 
     /** A known glow_style, or radial (the default) for anything else. */
@@ -374,6 +387,7 @@ final class Config {
             if (columns == 4) columns = 6;
         }
         String glowStyle = res.getString(R.string.glow_style);
+        String glassStyle = res.getString(R.string.glass_style);
         boolean applied = false;
 
         File dir = dir(ctx);
@@ -452,6 +466,7 @@ final class Config {
             longPressMove = bool(json, "long_press_move", longPressMove);
             iconBanners = bool(json, "icon_banners", iconBanners);
             glowStyle = string(json, "glow_style", glowStyle);
+            glassStyle = string(json, "glass_style", glassStyle);
         }
         // A theme push or reset invalidates choices made on the TV. On first use, remember the
         // current theme without clearing choices from an older launcher version.
@@ -481,6 +496,7 @@ final class Config {
         int wallpaperDim = json == null ? 0 : integer(json, "wallpaper_dim", 0, 0, 90);
         int dockOpacity = json == null ? 100 : integer(json, "dock_opacity", 100, 30, 100);
         dockOpacity = chosenDockOpacity(choices.getInt(DOCK_OPACITY_KEY, -1), dockOpacity);
+        glassStyle = choices.getString(GLASS_STYLE_KEY, glassStyle);
         String wallpaperOrder = json == null ? WallpaperRotation.ORDER_SHUFFLE
                 : string(json, "wallpaper_order", WallpaperRotation.ORDER_SHUFFLE);
         // An unknown order must not silently change how an existing collection rotates.
@@ -517,7 +533,7 @@ final class Config {
                 wallpapers, rotationMinutes, wallpaperDim, dockOpacity, wallpaperOrder, applied,
                 festival, inputKeycodes, appKeys, stockHomeRedirect, json == null ? Collections.emptyList() : raceCalendar(json), cinematic, ambientGlow, appGlow,
                 Math.max(0, idleClockMinutes), keyFilter, dockGlass, glowStyle, wallpaperCaptions, handleViewInputs, tileMenu, dockEvenPadding,
-                showAllApps, longPressMove, iconBanners);
+                showAllApps, longPressMove, iconBanners, glassStyle);
     }
 
     /**

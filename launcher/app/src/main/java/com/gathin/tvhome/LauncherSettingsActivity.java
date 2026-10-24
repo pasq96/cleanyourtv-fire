@@ -179,7 +179,7 @@ public final class LauncherSettingsActivity extends Activity {
                     choices.edit().putString(Themes.KEY, Themes.IDS[i]).remove("columns").remove(Config.ROWS_BELOW_DOCK_KEY)
                             .remove("animations").remove("advanced_effects").remove(Config.WALLPAPER_CHOICE_KEY)
                             .remove(Config.DOCK_OPACITY_KEY).remove("show_all_apps").remove("long_press_move")
-                            .remove("always_show_names").remove("show_inputs_pill").remove("show_network_pill").remove("dock_lift")
+                            .remove("always_show_names").remove("show_inputs_pill").remove("show_network_pill").remove("dock_lift").remove(Config.GLASS_STYLE_KEY)
                             .remove(DailyWallpaper.SOURCE_KEY).commit();
                     changed();
                     recreate();   // rows and toggles take the new theme's defaults
@@ -207,6 +207,11 @@ public final class LauncherSettingsActivity extends Activity {
                                 R.string.enable, () -> setAdvanced(true));
                     }
                 });
+        addPicker(findViewById(R.id.segGlass), R.string.lbl_glass, R.string.d_glass,
+                new int[]{R.string.glass_glass, R.string.glass_soft, R.string.glass_rim, R.string.glass_halo, R.string.glass_neon},
+                () -> Arrays.asList(Config.GLASS_STYLES).indexOf(choices.contains(Config.GLASS_STYLE_KEY)
+                        ? Config.glassStyle(choices.getString(Config.GLASS_STYLE_KEY, null)) : config.glassStyle),
+                i -> choices.edit().putString(Config.GLASS_STYLE_KEY, Config.GLASS_STYLES[i]).apply());
         addSegmented(findViewById(R.id.segGlide), R.string.lbl_glide, 0, new int[]{R.string.glide_off, R.string.glide_short, R.string.glide_normal},
                 () -> Math.max(0, Math.min(2, choices.getInt("glide_speed", 1))), i -> choices.edit().putInt("glide_speed", i).apply());
         addSegmented(findViewById(R.id.segSort), R.string.lbl_sort, R.string.d_sort, new int[]{R.string.sort_manual, R.string.sort_recent},
@@ -240,7 +245,7 @@ public final class LauncherSettingsActivity extends Activity {
             choices.edit().remove(Config.VPN_APP_KEY).remove("columns").remove(Config.ROWS_BELOW_DOCK_KEY).remove("animations")
                     .remove("advanced_effects").remove(Config.WALLPAPER_CHOICE_KEY)
                     .remove(Config.DOCK_OPACITY_KEY).remove("show_all_apps").remove("long_press_move")
-                    .remove("always_show_names").remove("show_inputs_pill").remove("show_network_pill").remove("dock_lift")
+                    .remove("always_show_names").remove("show_inputs_pill").remove("show_network_pill").remove("dock_lift").remove(Config.GLASS_STYLE_KEY)
                     .remove(DailyWallpaper.SOURCE_KEY).commit();
             changed();
             recreate();

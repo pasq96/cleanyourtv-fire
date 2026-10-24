@@ -240,4 +240,11 @@
     <string name="glide_off">Nessuno</string>
     <string name="glide_short">Breve</string>
     <string name="glide_normal">Normale</string>
+    <string name="lbl_glass">Evidenziazione</string>
+    <string name="d_glass">Il riquadro che segue il telecomando nella Home.</string>
+    <string name="glass_glass">Vetro</string>
+    <string name="glass_soft">Morbido</string>
+    <string name="glass_rim">Bordo</string>
+    <string name="glass_halo">Alone</string>
+    <string name="glass_neon">Neon</string>
 </resources>

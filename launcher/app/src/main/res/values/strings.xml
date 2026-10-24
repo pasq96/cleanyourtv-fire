@@ -286,4 +286,11 @@
     <string name="glide_off">None</string>
     <string name="glide_short">Short</string>
     <string name="glide_normal">Normal</string>
+    <string name="lbl_glass">Focus highlight</string>
+    <string name="d_glass">The highlight that follows the remote on Home.</string>
+    <string name="glass_glass">Glass</string>
+    <string name="glass_soft">Soft</string>
+    <string name="glass_rim">Rim</string>
+    <string name="glass_halo">Halo</string>
+    <string name="glass_neon">Neon</string>
 </resources>
