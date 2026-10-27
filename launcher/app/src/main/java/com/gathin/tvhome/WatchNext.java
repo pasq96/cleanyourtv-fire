@@ -64,6 +64,30 @@ final class WatchNext {
         return items;
     }
 
+    /** Programs of the apps' preview channels (YouTube's "Recommended", a streaming app's "Trending"), unfiltered. */
+    static List<ResumePick.Item> readSuggested(Context ctx) {
+        List<ResumePick.Item> items = new ArrayList<>();
+        if (missingPermission(ctx)) return items;
+        String[] columns = {
+                TvContract.PreviewPrograms.COLUMN_PACKAGE_NAME, TvContract.PreviewPrograms.COLUMN_TITLE,
+                TvContract.PreviewPrograms.COLUMN_SHORT_DESCRIPTION, TvContract.PreviewPrograms.COLUMN_POSTER_ART_URI,
+                TvContract.PreviewPrograms.COLUMN_THUMBNAIL_URI, TvContract.PreviewPrograms.COLUMN_INTENT_URI,
+                TvContract.PreviewPrograms.COLUMN_WEIGHT};
+        try (Cursor c = ctx.getContentResolver().query(TvContract.PreviewPrograms.CONTENT_URI, columns, null, null, null)) {
+            while (c != null && c.moveToNext()) {
+                if (c.getString(0) == null || blank(c.getString(1)) || blank(c.getString(5))) continue;
+                if (ctx.getPackageManager().getLaunchIntentForPackage(c.getString(0)) == null) continue;
+                String image = !blank(c.getString(4)) ? c.getString(4) : c.getString(3);
+                // The weight stands in for the engagement time: previews carry none.
+                items.add(new ResumePick.Item(c.getString(0), c.getString(1).trim(), blank(c.getString(2)) ? null : c.getString(2).trim(),
+                        blank(image) ? null : image, c.getString(5), c.getLong(6), -1f, ResumePick.SUGGESTED));
+            }
+        } catch (RuntimeException e) {
+            // Provider missing or refused: no suggestions.
+        }
+        return items;
+    }
+
     /** The row's intent: URI, scoped to the publishing app; null when malformed or aimed at another package. */
     static Intent intent(String uri, String pkg) {
         if (blank(uri)) return null;

@@ -117,6 +117,29 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical" />
+            <LinearLayout
+                android:id="@+id/segResumeAge"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
+            <LinearLayout
+                android:id="@+id/segResumePerApp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
+            <LinearLayout
+                android:id="@+id/segResumeSuggested"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
+            <LinearLayout
+                android:id="@+id/segResumeApps"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
+            <TextView
+                android:id="@+id/resumeUnhide"
+                style="@style/SettingsRow" />
         </LinearLayout>
         <TextView
             style="@style/SettingsSection"

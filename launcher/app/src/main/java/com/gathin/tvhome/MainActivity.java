@@ -550,8 +550,8 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         int rowsBelowDock = cfg.rowsBelowDock;
         // Launcher settings "dock height": each step lifts the dock 40dp, closing the gap under the top buttons.
         final int lift = Math.min(getSharedPreferences(Config.SETTINGS_NAME, MODE_PRIVATE).getInt("dock_lift", 1), 3) * (int) (40 * density);
-        resumeOn = this.dockRow && rowsBelowDock == 0 && !FireOs.is(this)
-                && getSharedPreferences(Config.SETTINGS_NAME, MODE_PRIVATE).getBoolean("resume_row", true);
+        resumeOn = this.dockRow && rowsBelowDock == 0
+                && getSharedPreferences(Config.SETTINGS_NAME, MODE_PRIVATE).getBoolean(ResumePick.KEY_ROW, true);
         if (resumeOn) {
             resumeRow = new ResumeRow(this);
             resumeRow.setVisibility(View.GONE);
@@ -559,7 +559,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
                 if (code == KeyEvent.KEYCODE_DPAD_UP) focusTile(lastFocused % COLUMNS);
                 else if (adapter.appCount() > COLUMNS) focusTile(Math.min(COLUMNS + lastFocused % COLUMNS, adapter.appCount() - 1));
                 return true;
-            }, this::openResume);
+            }, this::openResume, this::hideResume);
             ((FrameLayout) grid.getParent()).addView(resumeRow, new FrameLayout.LayoutParams(
                     FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.WRAP_CONTENT));
         }
@@ -895,8 +895,8 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         }
         askLocationForSsid();
         if (resumeOn) {
-            if (WatchNext.missingPermission(this)) askListings();
-            else reloadResume();
+            if (WatchNext.missingPermission(this) && !FireOs.is(this)) askListings();
+            reloadResume();
         }
         // Daily wallpaper: once the new picture is saved the change count moves and Home rebuilds with it.
         DailyWallpaper.refresh(this, false, (changed, error) -> { if (changed && !isDestroyed()) recreate(); });
@@ -2493,10 +2493,11 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     }
 
     private void reloadResume() {
-        if (!resumeOn || WatchNext.missingPermission(this)) return;
+        if (!resumeOn) return;
         final Context app = getApplicationContext();
+        final SharedPreferences prefs = pillChoices();
         new Thread(() -> {
-            java.util.List<ResumePick.Item> items = ResumePick.pick(WatchNext.read(app), System.currentTimeMillis());
+            java.util.List<ResumePick.Item> items = ResumeSource.load(app, prefs);
             runOnUiThread(() -> {
                 if (isDestroyed()) return;
                 int room = items.isEmpty() ? 0 : Math.round(ResumeRow.ROOM_DP * density);
@@ -2509,10 +2510,22 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         }, "ResumeRow").start();
     }
 
+    /** Long OK on a card: the item stays out of the shelf until Launcher settings bring it back. */
+    private void hideResume(ResumePick.Item item) {
+        java.util.Set<String> hidden = ResumeSource.hidden(pillChoices());
+        hidden.add(item.key());
+        pillChoices().edit().putStringSet(ResumePick.KEY_HIDDEN, hidden).apply();
+        Toast.makeText(this, R.string.resume_hidden_toast, Toast.LENGTH_SHORT).show();
+        focusTile(lastFocused % COLUMNS);
+        reloadResume();
+    }
+
     private void openResume(ResumePick.Item item) {
         Intent i = WatchNext.intent(item.intent, item.pkg);
         if (i == null) i = getPackageManager().getLaunchIntentForPackage(item.pkg);
-        if (i != null) open(i);
+        if (i == null) return;
+        LastOpened.record(this, item.pkg);
+        open(i);
     }
 
     private SharedPreferences pillChoices() {

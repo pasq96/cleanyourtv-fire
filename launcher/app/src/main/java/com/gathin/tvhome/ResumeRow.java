@@ -48,6 +48,7 @@ final class ResumeRow extends LinearLayout {
     /** Up/Down from a card; Left/Right at the ends are swallowed here. Returns true when handled. */
     private IntPredicate keys = code -> false;
     private OnPick onPick = item -> { };
+    private OnPick onHide = item -> { };
 
     interface OnPick { void pick(ResumePick.Item item); }
 
@@ -78,9 +79,10 @@ final class ResumeRow extends LinearLayout {
         addView(scroll, new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
     }
 
-    void setHandlers(IntPredicate keys, OnPick onPick) {
+    void setHandlers(IntPredicate keys, OnPick onPick, OnPick onHide) {
         this.keys = keys;
         this.onPick = onPick;
+        this.onHide = onHide;
     }
 
     boolean hasItems() { return cards.getChildCount() > 0; }
@@ -135,6 +137,7 @@ final class ResumeRow extends LinearLayout {
             v.animate().scaleX(focused ? 1.05f : 1f).scaleY(focused ? 1.05f : 1f).setDuration(140).start();
         });
         column.setOnClickListener(v -> onPick.pick(item));
+        column.setOnLongClickListener(v -> { onHide.pick(item); return true; });
         column.setOnKeyListener((v, code, event) -> {
             if (event.getAction() != KeyEvent.ACTION_DOWN) return false;
             int i = cards.indexOfChild(v);
@@ -142,8 +145,25 @@ final class ResumeRow extends LinearLayout {
             if (code == KeyEvent.KEYCODE_DPAD_RIGHT) return i == cards.getChildCount() - 1;
             return (code == KeyEvent.KEYCODE_DPAD_UP || code == KeyEvent.KEYCODE_DPAD_DOWN) && keys.test(code);
         });
-        load(item.image, image);
+        if (item.type == ResumePick.APP) appPicture(item.pkg, image);
+        else load(item.image, image);
         return column;
+    }
+
+    /** A recently opened app: its banner, or its icon centred on the card. */
+    private void appPicture(String pkg, ImageView into) {
+        android.content.pm.PackageManager pm = getContext().getPackageManager();
+        try {
+            android.graphics.drawable.Drawable d = pm.getApplicationBanner(pkg);
+            if (d == null) {
+                d = pm.getApplicationIcon(pkg);
+                into.setScaleType(ImageView.ScaleType.FIT_CENTER);
+                into.setPadding(dp(28), dp(14), dp(28), dp(14));
+            }
+            into.setImageDrawable(d);
+        } catch (android.content.pm.PackageManager.NameNotFoundException ignored) {
+            // Uninstalled since the list was built: the plain card stays.
+        }
     }
 
     private StateListDrawable ring() {

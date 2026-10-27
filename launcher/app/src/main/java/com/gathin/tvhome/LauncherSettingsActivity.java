@@ -214,8 +214,30 @@ public final class LauncherSettingsActivity extends Activity {
                 i -> choices.edit().putString(Config.GLASS_STYLE_KEY, Config.GLASS_STYLES[i]).apply());
         addSegmented(findViewById(R.id.segGlide), R.string.lbl_glide, 0, new int[]{R.string.glide_off, R.string.glide_short, R.string.glide_normal},
                 () -> Math.max(0, Math.min(2, choices.getInt("glide_speed", 1))), i -> choices.edit().putInt("glide_speed", i).apply());
-        addSegmented(findViewById(R.id.segResume), R.string.lbl_resume, 0, new int[]{R.string.on, R.string.off},
-                () -> choices.getBoolean("resume_row", true) ? 0 : 1, i -> choices.edit().putBoolean("resume_row", i == 0).apply());
+        addSegmented(findViewById(R.id.segResume), R.string.lbl_resume, R.string.d_resume, new int[]{R.string.on, R.string.off},
+                () -> choices.getBoolean(ResumePick.KEY_ROW, true) ? 0 : 1, i -> choices.edit().putBoolean(ResumePick.KEY_ROW, i == 0).apply());
+        addSegmented(findViewById(R.id.segResumeAge), R.string.lbl_resume_age, 0,
+                new int[]{R.string.resume_age_7, R.string.resume_age_30, R.string.resume_age_90, R.string.resume_age_all},
+                () -> Math.max(0, Math.min(3, choices.getInt(ResumePick.KEY_AGE, ResumePick.DEFAULT_AGE))),
+                i -> choices.edit().putInt(ResumePick.KEY_AGE, i).apply());
+        addSegmented(findViewById(R.id.segResumePerApp), R.string.lbl_resume_per_app, 0,
+                new CharSequence[]{"1", "3", "5", getString(R.string.resume_all)},
+                () -> Math.max(0, Math.min(3, choices.getInt(ResumePick.KEY_PER_APP, ResumePick.DEFAULT_PER_APP))),
+                i -> choices.edit().putInt(ResumePick.KEY_PER_APP, i).apply());
+        addSegmented(findViewById(R.id.segResumeSuggested), R.string.lbl_resume_suggested, R.string.d_resume_suggested,
+                new int[]{R.string.on, R.string.off},
+                () -> choices.getBoolean(ResumePick.KEY_SUGGESTED, false) ? 0 : 1, i -> choices.edit().putBoolean(ResumePick.KEY_SUGGESTED, i == 0).apply());
+        addSegmented(findViewById(R.id.segResumeApps), R.string.lbl_resume_apps, R.string.d_resume_apps, new int[]{R.string.on, R.string.off},
+                () -> choices.getBoolean(ResumePick.KEY_APPS, true) ? 0 : 1, i -> choices.edit().putBoolean(ResumePick.KEY_APPS, i == 0).apply());
+        TextView unhide = findViewById(R.id.resumeUnhide);
+        Runnable unhideLabel = () -> unhide.setText(getString(R.string.resume_unhide, ResumeSource.hidden(choices).size()));
+        unhideLabel.run();
+        unhide.setOnClickListener(v -> {
+            boolean any = !ResumeSource.hidden(choices).isEmpty();
+            choices.edit().remove(ResumePick.KEY_HIDDEN).apply();
+            unhideLabel.run();
+            if (any) Toast.makeText(this, R.string.resume_unhidden, Toast.LENGTH_SHORT).show();
+        });
         addSegmented(findViewById(R.id.segSort), R.string.lbl_sort, R.string.d_sort, new int[]{R.string.sort_manual, R.string.sort_recent},
                 () -> Themes.sortRecent(this) ? 1 : 0, i -> choices.edit().putBoolean(Themes.SORT_RECENT_KEY, i == 1).apply());
         addSegmented(findViewById(R.id.segUnits), R.string.lbl_units, 0, new int[]{R.string.weather_celsius, R.string.weather_fahrenheit},
