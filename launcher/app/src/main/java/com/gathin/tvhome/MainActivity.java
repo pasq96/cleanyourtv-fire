@@ -200,6 +200,14 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     // Static so they survive the activity being destroyed while another app is open (low-memory TVs,
     // or Developer options → "Don't keep activities"); they only reset when the process dies.
     private static int lastFocused = 0;
+    /** Continue watching shelf under the dock (Android TV's Watch Next); resumeRoomPx is what it takes from the dock's room. */
+    private ResumeRow resumeRow;
+    private int resumeRoomPx;
+    private boolean resumeOn;
+    private Runnable fitDock;
+    private Runnable stopWatchNext;
+    private final Runnable resumeChanged = this::reloadResume;
+    private static final int LISTINGS_REQUEST = 78;
     /** App of the last focused tile, so focus follows it when the app list changes. */
     private static String lastFocusedKey;
     private float density;
@@ -542,10 +550,23 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         int rowsBelowDock = cfg.rowsBelowDock;
         // Launcher settings "dock height": each step lifts the dock 40dp, closing the gap under the top buttons.
         final int lift = Math.min(getSharedPreferences(Config.SETTINGS_NAME, MODE_PRIVATE).getInt("dock_lift", 1), 3) * (int) (40 * density);
-        grid.addOnLayoutChangeListener((v, l, t, r, b, ol, ot, or, ob) -> {
-            int h = b - t;
+        resumeOn = this.dockRow && rowsBelowDock == 0 && !FireOs.is(this)
+                && getSharedPreferences(Config.SETTINGS_NAME, MODE_PRIVATE).getBoolean("resume_row", true);
+        if (resumeOn) {
+            resumeRow = new ResumeRow(this);
+            resumeRow.setVisibility(View.GONE);
+            resumeRow.setHandlers(code -> {
+                if (code == KeyEvent.KEYCODE_DPAD_UP) focusTile(lastFocused % COLUMNS);
+                else if (adapter.appCount() > COLUMNS) focusTile(Math.min(COLUMNS + lastFocused % COLUMNS, adapter.appCount() - 1));
+                return true;
+            }, this::openResume);
+            ((FrameLayout) grid.getParent()).addView(resumeRow, new FrameLayout.LayoutParams(
+                    FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.WRAP_CONTENT));
+        }
+        fitDock = () -> {
+            int h = grid.getHeight();
             // Item height follows the tile size, which follows the columns and the rows that must fit (AppAdapter.tileWidthPx).
-            int inner = (r - l) - grid.getPaddingLeft() - grid.getPaddingRight();
+            int inner = grid.getWidth() - grid.getPaddingLeft() - grid.getPaddingRight();
             int tileW = AppAdapter.tileWidthPx(inner, h, COLUMNS, rowsBelowDock, cfg.dockTitle, cfg.dockRow, density);
             int itemH = AppAdapter.itemHeightPx(AppAdapter.tileHeightPx(tileW), density);
             int dockRow = itemH + (int) (AppAdapter.DOCK_EXTRA_DP * density);   // item height plus DockDecoration offsets
@@ -553,7 +574,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             // Keep the hero below the header when the library is enabled on a short screen,
             // even when the theme requests an extra visible row below the dock.
             int shelfClearance = cfg.appLibrary ? hero.getMeasuredHeight() + (int) (40 * density) : 0;
-            int want = Math.max(shelfClearance, h - dockRow - gridRows - (int) (AppAdapter.BOTTOM_ROOM_DP * density) - lift);
+            int want = Math.max(shelfClearance, h - dockRow - gridRows - (int) (AppAdapter.BOTTOM_ROOM_DP * density) - lift - resumeRoomPx);
             // Where the rows cannot fit even at the smallest tile (3 rows with the title on), the title keeps its
             // room above the dock and the last rows run off the bottom instead of the title drawing over the clock.
             if (MainActivity.this.dockRow && cfg.dockTitle && rowsBelowDock > 0) want = Math.max(want, (int) (AppAdapter.TITLE_ROOM_DP * density));
@@ -562,10 +583,18 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             if (grid.getPaddingTop() != want) {
                 grid.setPadding(grid.getPaddingLeft(), want, grid.getPaddingRight(), grid.getPaddingBottom());
             }
+            if (resumeRow != null) {
+                FrameLayout.LayoutParams rp = (FrameLayout.LayoutParams) resumeRow.getLayoutParams();
+                if (rp.topMargin != want + dockRow) {
+                    rp.topMargin = want + dockRow;
+                    resumeRow.setLayoutParams(rp);
+                }
+            }
             // Cold start or column count > 4: the first focus can run before the grid has its final width or
             // padding, leaving the glass at the XML design size until a key is pressed.
             grid.post(this::refitGlass);
-        });
+        };
+        grid.addOnLayoutChangeListener((v, l, t, r, b, ol, ot, or, ob) -> fitDock.run());
 
         // Keep the glass glued to its tile while the grid scrolls.
         grid.addOnScrollListener(new RecyclerView.OnScrollListener() {
@@ -725,6 +754,13 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         getWindow().getDecorView().getViewTreeObserver().addOnGlobalFocusChangeListener((oldF, newF) -> {
             boolean onTile = newF != null && newF.getId() == R.id.card;
             if (!onTile) hideGlass();
+            if (resumeRow != null && resumeRow.hasItems()) {
+                if (resumeRow.holdsFocus(newF)) hideHero();
+                // The shelf belongs to the dock: it steps aside once focus scrolls the grid to the rows below.
+                View item = newF == null ? null : grid.findContainingItemView(newF);
+                boolean below = item != null && grid.getChildAdapterPosition(item) >= COLUMNS;
+                resumeRow.setVisibility(below ? View.INVISIBLE : View.VISIBLE);
+            }
         });
 
         packageFilter.addAction(Intent.ACTION_PACKAGE_ADDED);
@@ -839,6 +875,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         }
         updateClockVisibility();
         tileRefresh.onStart();
+        watchResume();
     }
 
     @Override
@@ -857,6 +894,10 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             return;
         }
         askLocationForSsid();
+        if (resumeOn) {
+            if (WatchNext.missingPermission(this)) askListings();
+            else reloadResume();
+        }
         // Daily wallpaper: once the new picture is saved the change count moves and Home rebuilds with it.
         DailyWallpaper.refresh(this, false, (changed, error) -> { if (changed && !isDestroyed()) recreate(); });
         updateWeather();
@@ -1084,6 +1125,9 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         handler.removeCallbacks(clockCheck);
         stopped = true;
         tileRefresh.onStop();
+        if (stopWatchNext != null) stopWatchNext.run();
+        stopWatchNext = null;
+        handler.removeCallbacks(resumeChanged);
     }
 
     /**
@@ -2144,6 +2188,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             if (position < COLUMNS) return false;          // dock row: let focus move to the top bar
             target = position - COLUMNS;
         } else {
+            if (position < COLUMNS && resumeRow != null && resumeRow.getVisibility() == View.VISIBLE && resumeRow.focusFirst()) return true;
             int lastRowStart = ((count - 1) / COLUMNS) * COLUMNS;
             if (position >= lastRowStart) {
                 if (adapter.isLibraryAt(count)) focusLibrary();
@@ -2421,6 +2466,53 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] results) {
         super.onRequestPermissionsResult(requestCode, permissions, results);
         if (requestCode == 77) updateWifiLabel();
+        if (requestCode == LISTINGS_REQUEST) {
+            watchResume();
+            reloadResume();
+        }
+    }
+
+    /** Reads Continue watching again whenever an app edits it (while Home is started). */
+    private void watchResume() {
+        if (!resumeOn || stopWatchNext != null || WatchNext.missingPermission(this)) return;
+        stopWatchNext = WatchNext.observe(this, () -> {
+            handler.removeCallbacks(resumeChanged);
+            handler.postDelayed(resumeChanged, 800);
+        });
+    }
+
+    /** Asks for the TV listings permission once; "pm grant ... READ_TV_LISTINGS" over adb works too. */
+    private void askListings() {
+        if (pillChoices().getBoolean("resume_asked", false)) return;
+        pillChoices().edit().putBoolean("resume_asked", true).apply();
+        try {
+            requestPermissions(new String[]{WatchNext.PERMISSION}, LISTINGS_REQUEST);
+        } catch (RuntimeException ignored) {
+            // No permission dialog on this TV: the shelf stays off until the permission is granted over adb.
+        }
+    }
+
+    private void reloadResume() {
+        if (!resumeOn || WatchNext.missingPermission(this)) return;
+        final Context app = getApplicationContext();
+        new Thread(() -> {
+            java.util.List<ResumePick.Item> items = ResumePick.pick(WatchNext.read(app), System.currentTimeMillis());
+            runOnUiThread(() -> {
+                if (isDestroyed()) return;
+                int room = items.isEmpty() ? 0 : Math.round(ResumeRow.ROOM_DP * density);
+                resumeRow.setItems(items);
+                if (room != resumeRoomPx) {
+                    resumeRoomPx = room;
+                    fitDock.run();
+                }
+            });
+        }, "ResumeRow").start();
+    }
+
+    private void openResume(ResumePick.Item item) {
+        Intent i = WatchNext.intent(item.intent, item.pkg);
+        if (i == null) i = getPackageManager().getLaunchIntentForPackage(item.pkg);
+        if (i != null) open(i);
     }
 
     private SharedPreferences pillChoices() {

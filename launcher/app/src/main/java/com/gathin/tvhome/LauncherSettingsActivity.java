@@ -214,6 +214,8 @@ public final class LauncherSettingsActivity extends Activity {
                 i -> choices.edit().putString(Config.GLASS_STYLE_KEY, Config.GLASS_STYLES[i]).apply());
         addSegmented(findViewById(R.id.segGlide), R.string.lbl_glide, 0, new int[]{R.string.glide_off, R.string.glide_short, R.string.glide_normal},
                 () -> Math.max(0, Math.min(2, choices.getInt("glide_speed", 1))), i -> choices.edit().putInt("glide_speed", i).apply());
+        addSegmented(findViewById(R.id.segResume), R.string.lbl_resume, 0, new int[]{R.string.on, R.string.off},
+                () -> choices.getBoolean("resume_row", true) ? 0 : 1, i -> choices.edit().putBoolean("resume_row", i == 0).apply());
         addSegmented(findViewById(R.id.segSort), R.string.lbl_sort, R.string.d_sort, new int[]{R.string.sort_manual, R.string.sort_recent},
                 () -> Themes.sortRecent(this) ? 1 : 0, i -> choices.edit().putBoolean(Themes.SORT_RECENT_KEY, i == 1).apply());
         addSegmented(findViewById(R.id.segUnits), R.string.lbl_units, 0, new int[]{R.string.weather_celsius, R.string.weather_fahrenheit},

@@ -112,6 +112,11 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical" />
+            <LinearLayout
+                android:id="@+id/segResume"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
         </LinearLayout>
         <TextView
             style="@style/SettingsSection"
